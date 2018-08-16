@@ -1,0 +1,261 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+################################################################################
+#
+#   Profile 顶级配置
+#
+#   - Different configuration profiles may be encoded here to be specified
+#   as parameters to the configtxgen tool
+#
+#   可以在此编码不同的profiles以进行指定作为configtxgen工具的参数
+################################################################################
+Profiles:
+
+    TwoOrgsOrdererGenesis:
+        Capabilities:
+            <<: *ChannelCapabilities
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        # 联盟组合体
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *Org1
+                    - *Org2
+    TwoOrgsChannel:
+        # 联盟
+        Consortium: SampleConsortium
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *Org1
+                - *Org2
+            Capabilities:
+                <<: *ApplicationCapabilities
+
+################################################################################
+#
+#   Section: Organizations 组织
+#
+#   - This section defines the different organizational identities which will
+#   be referenced later in the configuration.
+#
+#   这部分定义了不同的组织标识稍后在配置中引用
+################################################################################
+Organizations:
+
+    # SampleOrg defines an MSP using the sampleconfig.  It should never be used
+    # in production but may be used as a template for other definitions
+    #
+    # SampleOrg使用sampleconfig定义一个MSP。它不应该被使用在生产中，但可以用作其他定义的模板
+    - &OrdererOrg
+        # DefaultOrg defines the organization which is used in the sampleconfig
+        # of the fabric.git development environment
+        #
+        # DefaultOrg定义在fabric.git开发环境的sampleconfig中使用的组织
+        Name: OrdererOrg
+
+        # ID to load the MSP definition as
+        ID: OrdererMSP
+
+        # MSPDir is the filesystem path which contains the MSP configuration
+        # MSPDir是包含MSP配置的文件系统路径
+        MSPDir: crypto-config/ordererOrganizations/example.com/msp
+
+    - &Org1
+        # DefaultOrg defines the organization which is used in the sampleconfig
+        # of the fabric.git development environment
+        Name: Org1MSP
+
+        # ID to load the MSP definition as
+        ID: Org1MSP
+
+        MSPDir: crypto-config/peerOrganizations/org1.example.com/msp
+
+        AnchorPeers:
+            # AnchorPeers defines the location of peers which can be used
+            # for cross org gossip communication.  Note, this value is only
+            # encoded in the genesis block in the Application section context
+            #
+            # AnchorPeers定义了可用于跨组织沟通的对等点的位置。请注意，此值仅在“应用程序”部分上下文中的起始块中编码
+            - Host: peer0.org1.example.com
+              Port: 7051
+
+    - &Org2
+        # DefaultOrg defines the organization which is used in the sampleconfig
+        # of the fabric.git development environment
+        Name: Org2MSP
+
+        # ID to load the MSP definition as
+        ID: Org2MSP
+
+        MSPDir: crypto-config/peerOrganizations/org2.example.com/msp
+
+        AnchorPeers:
+            # AnchorPeers defines the location of peers which can be used
+            # for cross org gossip communication.  Note, this value is only
+            # encoded in the genesis block in the Application section context
+            - Host: peer0.org2.example.com
+              Port: 7051
+
+################################################################################
+#
+#   SECTION: Orderer
+#
+#   - This section defines the values to encode into a config transaction or
+#   genesis block for orderer related parameters
+#
+#   此部分定义要编码到Orderer相关参数的配置交易或生成块中的值
+################################################################################
+Orderer: &OrdererDefaults
+
+    # Orderer Type: The orderer implementation to start
+    # Available types are "solo" and "kafka"
+    # Orderer类型：订阅者实现启动可用的类型是“solo”和“kafka”
+    # solo 是基于单机硬盘模式的队列方式，可用于开发环境
+    OrdererType: kafka
+
+    Addresses:
+        - orderer.example.com:7050
+
+    # Batch Timeout: The amount of time to wait before creating a batch
+    # 批量超时：创建批次之前等待的时间量
+    BatchTimeout: 2s
+
+    # Batch Size: Controls the number of messages batched into a block
+    # 批量大小：控制批量成块的消息数量
+    BatchSize:
+
+        # Max Message Count: The maximum number of messages to permit in a batch
+        # 最大消息数：允许的最大消息数
+        MaxMessageCount: 10
+
+        # Absolute Max Bytes: The absolute maximum number of bytes allowed for
+        # the serialized messages in a batch.
+        # 绝对最大字节数：允许批量中的序列化消息的绝对最大字节数。
+        AbsoluteMaxBytes: 98 MB
+
+        # Preferred Max Bytes: The preferred maximum number of bytes allowed for
+        # the serialized messages in a batch. A message larger than the preferred
+        # max bytes will result in a batch larger than preferred max bytes.
+        # 首选最大字节数：允许批量中的序列化消息的首选字节数。大于首选最大字节的消息将导致批量大于首选最大字节数。
+        PreferredMaxBytes: 512 KB
+
+    Kafka:
+        # Brokers: A list of Kafka brokers to which the orderer connects. Edit
+        # this list to identify the brokers of the ordering service.
+        # NOTE: Use IP:port notation.
+        #
+        # orderer连接的kafka名单
+        Brokers:
+            - kafka0:9092
+            - kafka1:9092
+            - kafka2:9092
+            - kafka3:9092
+
+    # Organizations is the list of orgs which are defined as participants on
+    # the orderer side of the network
+    #
+    # 组织是在网络的订购者一侧定义为参与者的组织列表
+    Organizations:
+
+################################################################################
+#
+#   SECTION: Application
+#
+#   - This section defines the values to encode into a config transaction or
+#   genesis block for application related parameters
+#
+#   此部分定义要编码到应用程序相关参数的交易配置或创建块中的值
+################################################################################
+Application: &ApplicationDefaults
+
+    # Organizations is the list of orgs which are defined as participants on
+    # the application side of the network
+    #
+    # 组织是在网络应用程序端定义为参与者的组织列表
+    Organizations:
+################################################################################
+#
+#   SECTION: Capabilities
+#
+#   - This section defines the capabilities of fabric network. This is a new
+#   concept as of v1.1.0 and should not be utilized in mixed networks with
+#   v1.0.x peers and orderers.  Capabilities define features which must be
+#   present in a fabric binary for that binary to safely participate in the
+#   fabric network.  For instance, if a new MSP type is added, newer binaries
+#   might recognize and validate the signatures from this type, while older
+#   binaries without this support would be unable to validate those
+#   transactions.  This could lead to different versions of the fabric binaries
+#   having different world states.  Instead, defining a capability for a channel
+#   informs those binaries without this capability that they must cease
+#   processing transactions until they have been upgraded.  For v1.0.x if any
+#   capabilities are defined (including a map with all capabilities turned off)
+#   then the v1.0.x peer will deliberately crash.
+#
+#   本节定义了fabric 网络的功能。
+#   这是v1.1.0 以来的一个新概念，不应该在具有v1.0.x peer 和orderer 的混合网络中使用。
+#   功能定义了FABRIC二进制中必须存在的功能，以便该二进制安全地参与FABRIC网络。
+#   例如，如果添加了新的MSP类型，则较新的二进制文件可能会识别并验证来自此类型的签名，
+#   而较旧的二进制文件则无法验证这些事务。这可能会导致具有不同世界状态的不同版本的结构二进制文件。
+#   相反，为通道定义capability会通知那些没有这种capability的二进制文件，它们必须停止处理事务直到升级完成。
+#   对于v1.0.x，如果定义了任何功能（包括关闭所有功能的地图），则v1.0.x对等将故意崩溃。
+################################################################################
+Capabilities:
+    # Channel capabilities apply to both the orderers and the peers and must be
+    # supported by both.  Set the value of the capability to true to require it.
+    #
+    # 通道功能适用于orderers和peers，并且必须由两者支持。
+    # 将capability的值设置为true 则需要它
+    Global: &ChannelCapabilities
+        # V1.1 for Global is a catchall flag for behavior which has been
+        # determined to be desired for all orderers and peers running v1.0.x,
+        # but the modification of which would cause incompatibilities.  Users
+        # should leave this flag set to true.
+        #
+        # V1.1 for Global是行为的一个标志性标志，
+        # 已被确定为所有运行v1.0.x的orderers和peers所期望的行为，但其修改会导致不兼容。
+        # 用户应该将此标志设置为true。
+        V1_1: true
+
+    # Orderer capabilities apply only to the orderers, and may be safely
+    # manipulated without concern for upgrading peers.  Set the value of the
+    # capability to true to require it.
+    #
+    # Orderer的capabilities仅适用于orderers，并且可以安全地操纵，而不用担心升级同伴。
+    # 将capability的值设置为true 则需要它
+    Orderer: &OrdererCapabilities
+        # V1.1 for Order is a catchall flag for behavior which has been
+        # determined to be desired for all orderers running v1.0.x, but the
+        # modification of which  would cause incompatibilities.  Users should
+        # leave this flag set to true.
+        #
+        # V1.1 for Order是行为的一个catchall标志，
+        # 已被确定为所有运行v1.0.x的orderers所期望的行为，但其修改会导致不兼容。
+        # 用户应该将此标志设置为true。
+        V1_1: true
+
+    # Application capabilities apply only to the peer network, and may be safely
+    # manipulated without concern for upgrading orderers.  Set the value of the
+    # capability to true to require it.
+    #
+    # 应用程序功能仅适用于peer对等网络，并且可以安全地操作而不用担心升级orderers。
+    # 将capability的值设置为true 则需要它。
+    Application: &ApplicationCapabilities
+        # V1.1 for Application is a catchall flag for behavior which has been
+        # determined to be desired for all peers running v1.0.x, but the
+        # modification of which would cause incompatibilities.  Users should
+        # leave this flag set to true.
+        #
+        # V1.1 for Application是行为的一个catchall标志，
+        # 已被确定为运行v1.0.x的所有peers所期望的行为，但其修改会导致不兼容。
+        # 用户应该将此标志设置为true
+        V1_1: true
