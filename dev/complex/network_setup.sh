@@ -1,10 +1,4 @@
 #!/bin/bash
-#
-# Copyright IBM Corp. All Rights Reserved.
-#
-# SPDX-License-Identifier: Apache-2.0
-#
-
 
 UP_DOWN="$1"
 CHANNEL_NAME="$2"
@@ -78,7 +72,7 @@ function cleanDataStore(){
 	log yellow "#################### clean data store #################### "
 	
     log purple "clean hyperledger store data"
-    rm -rfv /var/hyperledger/*
+    rm -rfv /var/hyperledger/* /etc/hyperledger/*
 
     mkdir -pv /var/fabric/config
     log purple "clean hyperledger fabric key value store"
@@ -119,17 +113,22 @@ function networkUp () {
 	log yellow "#################### start fabric network #################### "
 	
     if [ ! -d "./e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config" ]; then
-      log red "e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config directory already exists."
+      log red "e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config directory not exists."
 	  exit 1
+    fi
+
+    if [ ! -f "./e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/channel-artifacts/${CHANNEL_NAME}.tx" ]; then
+      log red "e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/channel-artifacts/${CHANNEL_NAME}.tx file not exists."
+      exit 1
     fi
 
     echo
     if [ "${IF_COUCHDB}" == "couchdb" ]; then
-      log purple "==> CHANNEL_NAME=$CHANNEL_NAME TIMEOUT=$CLI_TIMEOUT docker-compose -f $COMPOSE_FILE -f $COMPOSE_FILE_COUCH up -d "
-      CHANNEL_NAME=$CHANNEL_NAME TIMEOUT=$CLI_TIMEOUT docker-compose -f $COMPOSE_FILE -f $COMPOSE_FILE_COUCH up # -d 2>&1
+      log purple "==> docker-compose -f $COMPOSE_FILE -f $COMPOSE_FILE_COUCH up -d "
+      docker-compose -f $COMPOSE_FILE -f $COMPOSE_FILE_COUCH up # -d 2>&1
     else
-      log purple "==> CHANNEL_NAME=$CHANNEL_NAME TIMEOUT=$CLI_TIMEOUT docker-compose -f $COMPOSE_FILE up -d "
-      CHANNEL_NAME=$CHANNEL_NAME TIMEOUT=$CLI_TIMEOUT docker-compose -f $COMPOSE_FILE up  #-d 2>&1
+      log purple "==> docker-compose -f $COMPOSE_FILE up -d "
+      docker-compose -f $COMPOSE_FILE up  #-d 2>&1
     fi
 
     #if [ $? -ne 0 ]; then
@@ -155,19 +154,13 @@ function networkDown () {
     fi
 
     #Cleanup the chaincode containers
-    echo
-    log purple "==> Cleanup the chaincode containers"
     clearContainers
 
     #Cleanup images
-    echo
-    log purple "==> Cleanup images"
     removeUnwantedImages
     
-    echo
-    log purple "==> Cleanup data store"
+    #Cleanup data store
     cleanDataStore    
-	
 	echo
 }
 
@@ -189,11 +182,12 @@ log red "COMPOSE_FILE=${COMPOSE_FILE}"
 log red "IF_COUCHDB=${IF_COUCHDB}"
 log red "IF_CA_MODE=${IF_CA_MODE}"
 log red "CHANNEL_NAME=${CHANNEL_NAME}"
+log red "TIMEOUT=${CLI_TIMEOUT}"
 log red "FABRIC_NETWORK_CONFIGTX_VERSION=${FABRIC_NETWORK_CONFIGTX_VERSION}"
-
+echo
 
 export CHANNEL_NAME=${CHANNEL_NAME}
-export TIMEOUT=${TIMEOUT}
+export TIMEOUT=${CLI_TIMEOUT}
 
 
 #Create the network using docker compose
@@ -207,6 +201,7 @@ elif [ "${UP_DOWN}" == "restart" ]; then ## Restart the network
 	networkUp
 elif [ "${UP_DOWN}" == "clean" ]; then ## clean all
 	networkDown
+	cleanNetwork
 else
 	printHelp
 	exit 1
