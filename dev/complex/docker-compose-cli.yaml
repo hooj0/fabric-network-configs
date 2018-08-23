@@ -95,7 +95,7 @@ services:
 
   orderer.simple.com:
     extends:
-      file:   base/docker-compose-base.yaml
+      file: base/docker-compose-base.yaml
       service: orderer.simple.com
     container_name: orderer.simple.com
     depends_on:
@@ -110,26 +110,36 @@ services:
   peer0.org1.foo.com:
     container_name: peer0.org1.foo.com
     extends:
-      file:  base/docker-compose-base.yaml
+      file: base/docker-compose-base.yaml
       service: peer0.org1.foo.com
+    depends_on:
+      - orderer.simple.com  
 
   peer1.org1.foo.com:
     container_name: peer1.org1.foo.com
     extends:
       file:  base/docker-compose-base.yaml
       service: peer1.org1.foo.com
+    depends_on:
+      - orderer.simple.com
+      - peer0.org1.foo.com  
 
   peer0.org2.bar.com:
     container_name: peer0.org2.bar.com
     extends:
-      file:  base/docker-compose-base.yaml
+      file: base/docker-compose-base.yaml
       service: peer0.org2.bar.com
+    depends_on:
+      - orderer.simple.com  
 
   peer1.org2.bar.com:
     container_name: peer1.org2.bar.com
     extends:
-      file:  base/docker-compose-base.yaml
+      file: base/docker-compose-base.yaml
       service: peer1.org2.bar.com
+    depends_on:
+      - orderer.simple.com
+      - peer0.org2.bar.com  
 
   cli:
     container_name: cli
