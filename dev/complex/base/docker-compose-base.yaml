@@ -1,8 +1,3 @@
-# Copyright IBM Corp. All Rights Reserved.
-#
-# SPDX-License-Identifier: Apache-2.0
-#
-
 version: '2'
 
 services:
@@ -10,9 +5,9 @@ services:
     image: hyperledger/fabric-zookeeper${IMAGE_TAG_FABRIC_ZOOKEEPER}
     restart: always
     ports:
-      - '2181'
-      - '2888'
-      - '3888'
+      - 2181
+      - 2888
+      - 3888
 
   kafka:
     image: hyperledger/fabric-kafka${IMAGE_TAG_FABRIC_KAFKA}
@@ -22,7 +17,7 @@ services:
       - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024 # 99 * 1024 * 1024 B
       - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
     ports:
-      - '9092'
+      - 9092
 
   orderer.simple.com:
     container_name: orderer.simple.com
@@ -31,50 +26,60 @@ services:
       - ORDERER_GENERAL_LOGLEVEL=debug
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_GENESISMETHOD=file
-      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/genesis.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
-
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/msp/orderer/msp
       # enabled TLS
       - ORDERER_GENERAL_TLS_ENABLED=${HYPERLEDGER_FABRIC_ENABLE_TLS}
       - ORDERER_GENERAL_TLS_CLIENTAUTHREQUIRED=${HYPERLEDGER_FABRIC_ENABLE_CLIENT_AUTH_REQUIRED}
-
-      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
-      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
-      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
-      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
-      - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
-      - ORDERER_KAFKA_VERBOSE=true
-
-      # add custom config
-      - GRPC_TRACE=all=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/msp/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/msp/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/msp/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_TLS_CLIENTROOTCAS=[/etc/hyperledger/msp/peerOrg1/msp/tlscacerts/tlsca.org1.foo.com-cert.pem, /etc/hyperledger/msp/peerOrg2/msp/tlscacerts/tlsca.org2.bar.com-cert.pem]
+      - GRPC_TRACE=all=true,
       - GRPC_VERBOSITY=debug
       - ORDERER_GENERAL_AUTHENTICATION_TIMEWINDOW=3600s #Not for production -- remove.
+      
+      # new add config
+      #- ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      #- ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
+      #- ORDERER_KAFKA_VERBOSE=true
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     command: orderer
     volumes:
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/ordererOrganizations/simple.com/orderers/orderer.simple.com/msp:/var/hyperledger/orderer/msp
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/ordererOrganizations/simple.com/orderers/orderer.simple.com/tls/:/var/hyperledger/orderer/tls
+      - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/channel-artifacts:/etc/hyperledger/configtx:ro
+      - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/ordererOrganizations/simple.com/orderers/orderer.simple.com/:/etc/hyperledger/msp/orderer:ro
+      - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.foo.com/peers/peer0.org1.foo.com/:/etc/hyperledger/msp/peerOrg1:ro
+      - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.bar.com/peers/peer0.org2.bar.com/:/etc/hyperledger/msp/peerOrg2:ro
     ports:
       - 7050:7050
 
   peer0.org1.foo.com:
     container_name: peer0.org1.foo.com
     extends:
-      file: peer-base.yaml
+      file: base-peer.yaml
       service: peer-base
     environment:
       - CORE_PEER_ID=peer0.org1.foo.com
       - CORE_PEER_ADDRESS=peer0.org1.foo.com:7051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.org1.foo.com:7052
-      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.foo.com:7051
+      #- CORE_PEER_GOSSIP_ORGLEADER=true
       - CORE_PEER_LOCALMSPID=Org1MSP
+
+      #- CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/msp/cacerts/ca.org1.foo.com-cert.pem
+      - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org1.foo.com-cert.pem
+      
+      # NEW ADD
+      #- CORE_PEER_CHAINCODEADDRESS=peer0.org1.foo.com:7052
+      #- CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      
+      # v1.2
+      #- CORE_PEER_EVENTS_ADDRESS=0.0.0.0:7053
+      #- CORE_PEER_GOSSIP_ENDPOINT=peer0.org1.foo.com:7051
+      #- CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.foo.com:7051
     volumes:
-        - /var/run/:/host/var/run/
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.foo.com/peers/peer0.org1.foo.com/msp:/etc/hyperledger/fabric/msp
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.foo.com/peers/peer0.org1.foo.com/tls:/etc/hyperledger/fabric/tls
+      - /var/run/:/host/var/run/
+      - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.foo.com/peers/peer0.org1.foo.com/:/etc/hyperledger/msp/peer:ro
     ports:
       - 7051:7051
       - 7052:7052
@@ -83,65 +88,94 @@ services:
   peer1.org1.foo.com:
     container_name: peer1.org1.foo.com
     extends:
-      file: peer-base.yaml
+      file: base-peer.yaml
       service: peer-base
     environment:
       - CORE_PEER_ID=peer1.org1.foo.com
       - CORE_PEER_ADDRESS=peer1.org1.foo.com:7051
-      - CORE_PEER_CHAINCODEADDRESS=peer1.org1.foo.com:7052
-      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.foo.com:7051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.foo.com:7051
+      #- CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.foo.com:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
-    volumes:
-        - /var/run/:/host/var/run/
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.foo.com/peers/peer1.org1.foo.com/msp:/etc/hyperledger/fabric/msp
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.foo.com/peers/peer1.org1.foo.com/tls:/etc/hyperledger/fabric/tls
 
+      #- CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/msp/cacerts/ca.org1.foo.com-cert.pem
+      - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org1.foo.com-cert.pem
+      
+      # NEW ADD
+      #- CORE_PEER_CHAINCODEADDRESS=peer1.org1.foo.com:7052
+      #- CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      #- CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.foo.com:7051
+      
+      # v1.2
+      #- CORE_PEER_LISTENADDRESS=peer1.org1.foo.com:7051 #7056
+      #- CORE_PEER_EVENTS_ADDRESS=0.0.0.0:7053 #7058
+      #- CORE_PEER_GOSSIP_ENDPOINT=peer1.org1.foo.com:7051 #7056
+    volumes:
+      - /var/run/:/host/var/run/
+      - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.foo.com/peers/peer1.org1.foo.com/:/etc/hyperledger/msp/peer:ro
+    ports:
+      - 7056:7051
+      - 7057:7052
+      - 7058:7053
+
+  peer0.org2.bar.com:
+    container_name: peer0.org2.bar.com
+    extends:
+      file: base-peer.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.org2.bar.com
+      - CORE_PEER_ADDRESS=peer0.org2.bar.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.bar.com:8051
+      #- CORE_PEER_GOSSIP_ORGLEADER=true
+      - CORE_PEER_LOCALMSPID=Org2MSP
+      #- CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/msp/cacerts/ca.org2.bar.com-cert.pem
+      - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org2.bar.com-cert.pem
+      
+      # NEW ADD
+      #- CORE_PEER_CHAINCODEADDRESS=peer0.org2.bar.com:7052
+      #- CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      
+      # v1.2
+      #- CORE_PEER_LISTENADDRESS=peer0.org2.bar.com:8051 #?7051
+      #- CORE_PEER_GOSSIP_ENDPOINT=peer0.org2.bar.com:8051 #?7051
+      #- CORE_PEER_EVENTS_ADDRESS=0.0.0.0:8053 #?7053
+      #- CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.bar.com:8051 #?7051
+    volumes:
+      - /var/run/:/host/var/run/
+      - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.bar.com/peers/peer0.org2.bar.com/:/etc/hyperledger/msp/peer:ro
     ports:
       - 8051:7051
       - 8052:7052
       - 8053:7053
 
-  peer0.org2.bar.com:
-    container_name: peer0.org2.bar.com
-    extends:
-      file: peer-base.yaml
-      service: peer-base
-    environment:
-      - CORE_PEER_ID=peer0.org2.bar.com
-      - CORE_PEER_ADDRESS=peer0.org2.bar.com:7051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.org2.bar.com:7052
-      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.bar.com:7051
-      - CORE_PEER_LOCALMSPID=Org2MSP
-    volumes:
-        - /var/run/:/host/var/run/
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.bar.com/peers/peer0.org2.bar.com/msp:/etc/hyperledger/fabric/msp
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.bar.com/peers/peer0.org2.bar.com/tls:/etc/hyperledger/fabric/tls
-    ports:
-      - 9051:7051
-      - 9052:7052
-      - 9053:7053
-
   peer1.org2.bar.com:
     container_name: peer1.org2.bar.com
     extends:
-      file: peer-base.yaml
+      file: base-peer.yaml
       service: peer-base
     environment:
       - CORE_PEER_ID=peer1.org2.bar.com
       - CORE_PEER_ADDRESS=peer1.org2.bar.com:7051
-      - CORE_PEER_CHAINCODEADDRESS=peer1.org2.bar.com:7052
-      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.bar.com:7051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.bar.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.bar.com:8051
+      #- CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.bar.com:8051
       - CORE_PEER_LOCALMSPID=Org2MSP
+      #- CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/msp/cacerts/ca.org2.bar.com-cert.pem
+      - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org2.bar.com-cert.pem
+      
+      # NEW ADD
+      #- CORE_PEER_CHAINCODEADDRESS=peer1.org2.bar.com:7052
+      #- CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      #- CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.bar.com:7051
+      
+      # v1.2
+      #- CORE_PEER_LISTENADDRESS=peer1.org2.bar.com:8056 #?7051
+      #- CORE_PEER_GOSSIP_ENDPOINT=peer0.org1.bar.com:8056 #?7051
+      #- CORE_PEER_EVENTS_ADDRESS=0.0.0.0:8058 #?7053
     volumes:
-        - /var/run/:/host/var/run/
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.bar.com/peers/peer1.org2.bar.com/msp:/etc/hyperledger/fabric/msp
-        - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.bar.com/peers/peer1.org2.bar.com/tls:/etc/hyperledger/fabric/tls
+      - /var/run/:/host/var/run/
+      - ../e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.bar.com/peers/peer1.org2.bar.com/:/etc/hyperledger/msp/peer:ro
     ports:
-      - 10051:7051
-      - 10052:7052
-      - 10053:7053
+      - 8056:7051
+      - 8057:7052
+      - 8058:7053
+
