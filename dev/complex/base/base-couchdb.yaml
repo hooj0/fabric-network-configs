@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  couchdb-base:
+    image: hyperledger/fabric-couchdb${IMAGE_TAG_FABRIC_COUCHDB}
+    restart: always
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    #expose:
+    #  - 5984  
