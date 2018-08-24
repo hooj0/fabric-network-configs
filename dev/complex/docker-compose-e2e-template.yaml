@@ -1,8 +1,3 @@
-# Copyright IBM Corp. All Rights Reserved.
-#
-# SPDX-License-Identifier: Apache-2.0
-#
-
 version: '2'
 
 services:
@@ -13,10 +8,10 @@ services:
       service: ca-base
     environment:
       - FABRIC_CA_SERVER_CA_NAME=ca-org1
-      - FABRIC_CA_SERVER_TLS_ENABLED=${HYPERLEDGER_FABRIC_ENABLE_TLS}
       - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY  
       - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem
     command: sh -c "fabric-ca-server start ${V11_IDENTITIES_ALLOWREMOVE} ${V11_AFFILIATIONS_ALLOWREMOVE} --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -b admin:adminpw -d"
+    #command: sh -c "fabric-ca-server start -n ca-org1 ${V11_IDENTITIES_ALLOWREMOVE} ${V11_AFFILIATIONS_ALLOWREMOVE} --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -b admin:adminpw ${HYPERLEDGER_FABRIC_ENABLE_CA_TLS} --tls.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem --tls.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -d"
     ports:
       - "7054:7054"
     volumes:
@@ -29,10 +24,10 @@ services:
       service: ca-base
     environment:
       - FABRIC_CA_SERVER_CA_NAME=ca-org2
-      - FABRIC_CA_SERVER_TLS_ENABLED=${HYPERLEDGER_FABRIC_ENABLE_TLS}
       - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY
       - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem
     command: sh -c "fabric-ca-server start --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -b admin:adminpw -d"
+    #command: sh -c "fabric-ca-server start --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -b admin:adminpw ${HYPERLEDGER_FABRIC_ENABLE_CA_TLS} --tls.certfile /etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem --tls.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -d"
     ports:
       - "8054:7054"
     volumes:
@@ -45,7 +40,6 @@ services:
       service: zookeeper
     environment:
       - ZOO_MY_ID=1
-      - ZOO_SERVERS=server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888
 
   zookeeper1:
     container_name: zookeeper1
@@ -54,7 +48,6 @@ services:
       service: zookeeper
     environment:
       - ZOO_MY_ID=2
-      - ZOO_SERVERS=server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888
 
   zookeeper2:
     container_name: zookeeper2
@@ -63,7 +56,6 @@ services:
       service: zookeeper
     environment:
       - ZOO_MY_ID=3
-      - ZOO_SERVERS=server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888
 
   kafka0:
     container_name: kafka0
@@ -72,9 +64,6 @@ services:
       service: kafka
     environment:
       - KAFKA_BROKER_ID=0
-      - KAFKA_MIN_INSYNC_REPLICAS=2
-      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
     depends_on:
       - zookeeper0
       - zookeeper1
@@ -87,9 +76,6 @@ services:
       service: kafka
     environment:
       - KAFKA_BROKER_ID=1
-      - KAFKA_MIN_INSYNC_REPLICAS=2
-      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
     depends_on:
       - zookeeper0
       - zookeeper1
@@ -102,9 +88,6 @@ services:
       service: kafka
     environment:
       - KAFKA_BROKER_ID=2
-      - KAFKA_MIN_INSYNC_REPLICAS=2
-      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
     depends_on:
       - zookeeper0
       - zookeeper1
@@ -117,19 +100,16 @@ services:
       service: kafka
     environment:
       - KAFKA_BROKER_ID=3
-      - KAFKA_MIN_INSYNC_REPLICAS=2
-      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
     depends_on:
       - zookeeper0
       - zookeeper1
       - zookeeper2
 
   orderer.simple.com:
+    container_name: orderer.simple.com
     extends:
       file: base/docker-compose-base.yaml
       service: orderer.simple.com
-    container_name: orderer.simple.com
     depends_on:
       - zookeeper0
       - zookeeper1
@@ -175,10 +155,22 @@ services:
   
   configtxlator:
     image: hyperledger/fabric-tools${IMAGE_TAG_FABRIC}
+    container_name: configtxlator.com
     ports:
       - "7059:7059"
     command: /usr/local/bin/configtxlator start
-    container_name: configtxlator.com
 
   ccenv:
     image: hyperledger/fabric-ccenv${IMAGE_TAG_FABRIC}
+    container_name: chaincode.env.com
+
+  visualizer:
+    container_name: visualizer.com
+    extends:
+      file: base/base-visualizer.yaml
+      service: visualizer-base
+    ports:
+      - "8080:8080"
+    #deploy:
+      #placement:
+        #constraints: [node.role == manager]
