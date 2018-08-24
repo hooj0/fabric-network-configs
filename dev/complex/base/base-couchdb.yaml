@@ -7,5 +7,5 @@ services:
     environment:
       - COUCHDB_USER=
       - COUCHDB_PASSWORD=
-    #expose:
-    #  - 5984  
+    expose:
+      - 5984  
