@@ -15,8 +15,8 @@ function printHelp () {
 	echo "Usage: ./network_setup <up|down|restart> <channel> <ca> <couchdb>.\nThe arguments must be in order."
 }
 
-function validateArgs () {	
-    log yellow "#################### validate args #################### "
+function validateArgs () {
+    log yellow "############################ validate args ########################### "
 	
     if [ $# -lt 1 ]; then
         log red "Empty args options, Option up / down / restart not mentioned"
@@ -43,11 +43,11 @@ function validateArgs () {
 }
 
 function clearContainers () {
-	log yellow "#################### clean container #################### "
+	log yellow "########################## clean container ########################### "
     
 	CONTAINER_IDS=$(docker ps -aq)
     if [ -z "$CONTAINER_IDS" -o "$CONTAINER_IDS" = " " ]; then
-        log sky_blue " ---- No containers available for deletion ----"
+        log sky_blue "---- No containers available for deletion ----"
     else
         log purple "==> remove docker containers: ${CONTAINER_IDS}"
         docker rm -f $CONTAINER_IDS
@@ -56,7 +56,7 @@ function clearContainers () {
 }
 
 function removeUnwantedImages() {
-	log yellow "#################### clean unwanted images #################### "
+	log yellow "######################## clean unwanted images ####################### "
 
     DOCKER_IMAGE_IDS=$(docker images | grep "dev\|none\|test-vp\|peer[0-9]-" | awk '{print $3}')
     if [ -z "$DOCKER_IMAGE_IDS" -o "$DOCKER_IMAGE_IDS" = " " ]; then
@@ -69,7 +69,7 @@ function removeUnwantedImages() {
 }
 
 function cleanDataStore(){
-	log yellow "#################### clean data store #################### "
+	log yellow "########################### clean data store ######################### "
 	
     log purple "clean hyperledger store data"
     rm -rfv /var/hyperledger/* /etc/hyperledger/*
@@ -82,7 +82,7 @@ function cleanDataStore(){
 
 # disabled
 function cleanNetwork() {
-	log yellow "#################### clean network #################### "
+	log yellow "############################ clean network ########################### "
     
 	lines=`docker ps -a | grep 'dev-peer' | wc -l`
 
@@ -110,25 +110,30 @@ function cleanNetwork() {
 }
 
 function networkUp () {
-	log yellow "#################### start fabric network #################### "
+	log yellow "######################## start fabric network ######################## "
 	
     if [ ! -d "./e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config" ]; then
       log red "e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config directory not exists."
+      #source ./e2e-network/generate.sh -v ${FABRIC_NETWORK_CONFIGTX_VERSION} -c ${CHANNEL_NAME} clean gen merge
+	  log _blue "\nPlease generate the required [crypto-config] files\nExample:"
+	  log _blue "\t cd e2e-network \n\t sudo sh generate.sh -v ${FABRIC_NETWORK_CONFIGTX_VERSION} -c ${CHANNEL_NAME} clean gen merge"
 	  exit 1
     fi
 
     if [ ! -f "./e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/channel-artifacts/${CHANNEL_NAME}.tx" ]; then
       log red "e2e-network/${FABRIC_NETWORK_CONFIGTX_VERSION}/channel-artifacts/${CHANNEL_NAME}.tx file not exists."
+      #source ./e2e-network/generate.sh -v ${FABRIC_NETWORK_CONFIGTX_VERSION} -c ${CHANNEL_NAME} gen-channel 
+	  log _blue "\nPlease generate the required [${CHANNEL_NAME}.tx] files\nExample:"
+	  log _blue "\t cd e2e-network \n\t sudo sh generate.sh -v ${FABRIC_NETWORK_CONFIGTX_VERSION} -c ${CHANNEL_NAME} gen-channel"
       exit 1
     fi
 
-    echo
     if [ "${IF_COUCHDB}" == "couchdb" ]; then
       log purple "==> docker-compose -f $COMPOSE_FILE -f $COMPOSE_FILE_COUCH up -d "
-      docker-compose -f $COMPOSE_FILE -f $COMPOSE_FILE_COUCH up # -d 2>&1
+      ADMIN_USER=admin ADMIN_PASSWORD=admin docker-compose -f $COMPOSE_FILE -f $COMPOSE_FILE_COUCH -f docker-compose-prom.yaml up # -d 2>&1
     else
       log purple "==> docker-compose -f $COMPOSE_FILE up -d "
-      docker-compose -f $COMPOSE_FILE up  #-d 2>&1
+      ADMIN_USER=admin ADMIN_PASSWORD=admin docker-compose -f $COMPOSE_FILE -f docker-compose-prom.yaml up  #-d 2>&1
     fi
 
     #if [ $? -ne 0 ]; then
@@ -147,12 +152,13 @@ function networkDown () {
 	
     if [ "${IF_COUCHDB}" == "couchdb" ]; then
       log purple "==> docker-compose -f $COMPOSE_FILE -f $COMPOSE_FILE_COUCH down"
-      docker-compose -f $COMPOSE_FILE -f $COMPOSE_FILE_COUCH down
+      docker-compose -f $COMPOSE_FILE -f $COMPOSE_FILE_COUCH -f docker-compose-prom.yaml down
     else
       log purple "==> docker-compose -f $COMPOSE_FILE down"
-      docker-compose -f $COMPOSE_FILE down
+      docker-compose -f $COMPOSE_FILE -f docker-compose-prom.yaml down
     fi
-
+	echo
+	
     #Cleanup the chaincode containers
     clearContainers
 
