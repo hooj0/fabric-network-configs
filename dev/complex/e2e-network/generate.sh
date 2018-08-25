@@ -38,7 +38,7 @@ COMMANDS:
   merge 		merge channel & artifacts & certificates to version directory
   regen 		regenerate channel & artifacts & certificates
 	
-EXAMPLE: 
+EXAMPLES: 
   $0 -h
   $0 help
 
@@ -311,7 +311,7 @@ printf "\n\n"
 
 while getopts ":c:v:hau" opt; do
 
-	printf "选项：%s, 参数值：$OPTARG \n" $opt
+	#printf "选项：%s, 参数值：$OPTARG \n" $opt
     case $opt in
     	c ) 
 			CHANNEL_NAME="$CHANNEL_NAME $OPTARG"
