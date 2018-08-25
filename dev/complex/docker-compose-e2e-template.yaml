@@ -163,14 +163,3 @@ services:
   ccenv:
     image: hyperledger/fabric-ccenv${IMAGE_TAG_FABRIC}
     container_name: chaincode.env.com
-
-  visualizer:
-    container_name: visualizer.com
-    extends:
-      file: base/base-visualizer.yaml
-      service: visualizer-base
-    ports:
-      - "8080:8080"
-    #deploy:
-      #placement:
-        #constraints: [node.role == manager]
