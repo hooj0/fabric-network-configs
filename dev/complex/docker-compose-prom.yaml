@@ -1,10 +1,11 @@
 version: '2.0'
 
 networks:
+  default:
   monitor-net:
-    #driver: bridge
-    external:
-      name: complex_default
+    driver: bridge
+    #external:
+    #  name: complex_default
 
 volumes:
     prometheus_data: {}
@@ -24,12 +25,14 @@ services:
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention=200h'
+      #- '--storage.local.target-heap-size=107374182'
       - '--web.enable-lifecycle'
     restart: unless-stopped
     expose:
       - 9090
     networks:
       - monitor-net
+      - default
     labels:
       org.label-schema.group: "monitoring"
   
@@ -46,6 +49,7 @@ services:
       - 9093
     networks:
       - monitor-net
+      - default
     labels:
       org.label-schema.group: "monitoring"
 
@@ -67,6 +71,7 @@ services:
       - 9100
     networks:
       - monitor-net
+      - default
     labels:
       org.label-schema.group: "monitoring"
 
@@ -84,6 +89,7 @@ services:
       - 8080
     networks:
       - monitor-net
+      - default
     labels:
       org.label-schema.group: "monitoring"
   
@@ -107,6 +113,7 @@ services:
       - 3000
     networks:
       - monitor-net
+      - default
     labels:
       org.label-schema.group: "monitoring"
 
@@ -118,6 +125,7 @@ services:
       - 9091
     networks:
       - monitor-net
+      - default
     labels:
       org.label-schema.group: "monitoring"
 
@@ -137,5 +145,6 @@ services:
     restart: unless-stopped
     networks:
       - monitor-net
+      - default
     labels:
       org.label-schema.group: "monitoring"
