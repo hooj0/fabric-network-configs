@@ -26,18 +26,18 @@ cat << HELP
 USAGE: $0 [OPTIONS] COMMANDS
 
 OPTIONS: 
-  -h help 		use the help manual.
-  -v version 		fabric configtx generate config version(default: v1.1).
-  -c channel		generate channel configtx files(default: mycc)
-  -a anchor peer	generate anchor peer config tx files
+  -h help           use the help manual.
+  -v version        fabric configtx generate config version(default: v1.1).
+  -c channel        generate channel configtx files(default: mycc)
+  -a anchor peer    generate anchor peer config tx files
 
 COMMANDS:
-  clean 		clean store & config
-  gen 			generate channel & artifacts & certificates
-  gen-channel 		generate "increment" channel configtx artifacts
-  merge 		merge channel & artifacts & certificates to version directory
-  regen 		regenerate channel & artifacts & certificates
-	
+  clean           clean store & config
+  gen             generate channel & artifacts & certificates
+  gen-channel     generate "increment" channel configtx artifacts
+  merge           merge channel & artifacts & certificates to version directory
+  regen           regenerate channel & artifacts & certificates
+    
 EXAMPLES: 
   $0 -h
   $0 help
@@ -48,40 +48,49 @@ EXAMPLES:
   $0 -v v1.1 -c mycc regen merge
   $0 -c mychannel -c mycc gen-channel
   $0 -c mychannel -v v1.2 gen-channel
-	
+    
   $0 -a -c mychannel -c mycc clean gen-channel
   $0 -c mychannel -v v1.1 merge
   $0 -c mychannel -v v1.1 clean
-	
+    
 HELP
 exit 0
 }
 
+function validateArgs () {
+    #log yellow "############################ validate args ########################### "
+    
+    if [ $# -lt 1 ]; then
+        usageHelp
+        exit 1
+    fi     
+}
+
 ## Using docker-compose template replace private key file names with constants
 function replacePrivateKey () {
-	echo
-	echo "##########################################################"
-	echo "#####         replace certificates  key          #########"
-	echo "##########################################################"
-	
-	ARCH=`uname -s | grep Darwin`
-	echo "ARCH: $ARCH"
-	if [ "$ARCH" == "Darwin" ]; then
-		OPTS="-it"
-	else
-		OPTS="-i"
-	fi
-	echo "OPTS: $OPTS"
+    echo
+    echo "##########################################################"
+    echo "#####         replace certificates  key          #########"
+    echo "##########################################################"
+    
+    ARCH=`uname -s | grep Darwin`
+    echo "ARCH: $ARCH"
+    if [ "$ARCH" == "Darwin" ]; then
+        OPTS="-it"
+    else
+        OPTS="-i"
+    fi
+    echo "OPTS: $OPTS"
 
     echo
     log yellow "==> cp -rv ../docker-compose-e2e-template.yaml ../docker-compose-e2e-$VERSION_DIR.yaml"
-	cp -rv ../docker-compose-e2e-template.yaml docker-compose-e2e-${VERSION_DIR}.yaml
+    cp -rv ../docker-compose-e2e-template.yaml docker-compose-e2e-${VERSION_DIR}.yaml
 
     CURRENT_DIR=$PWD
     cd ./$CRYPTO_CONFIG_LOCATION/peerOrganizations/org1.foo.com/ca/
     PRIV_KEY=$(ls *_sk)
     cd $CURRENT_DIR
-	
+    
     sed $OPTS "s/CA1_PRIVATE_KEY/${PRIV_KEY}/g" "docker-compose-e2e-${VERSION_DIR}.yaml"
 
     cd ./$CRYPTO_CONFIG_LOCATION/peerOrganizations/org2.bar.com/ca/
@@ -90,216 +99,216 @@ function replacePrivateKey () {
 
     sed $OPTS "s/CA2_PRIVATE_KEY/${PRIV_KEY}/g" "docker-compose-e2e-${VERSION_DIR}.yaml"
     
-	mv -vf docker-compose-e2e-${VERSION_DIR}.yaml ../docker-compose-e2e-${VERSION_DIR}.yaml
-	log green "replace sk......Done!"
-	echo
+    mv -vf docker-compose-e2e-${VERSION_DIR}.yaml ../docker-compose-e2e-${VERSION_DIR}.yaml
+    log green "replace sk......Done!"
+    echo
 }
 
 ## Generates Org certs using cryptogen tool
 function generateCerts() {
-	CRYPTOGEN=$FABRIC_ROOT/release/$OS_ARCH/bin/cryptogen
+    CRYPTOGEN=$FABRIC_ROOT/release/$OS_ARCH/bin/cryptogen
 
-	if [ -f "$CRYPTOGEN" ]; then
+    if [ -f "$CRYPTOGEN" ]; then
         log yellow "Using cryptogen -> $CRYPTOGEN"
-		log green "check crypto......Done!"
-	else
-	    log yellow "Building cryptogen"
-	    log yellow "===> make -C $FABRIC_ROOT release"
-	    make -C $FABRIC_ROOT release
-		log green "make crypto......Done!"
-	fi
+        log green "check crypto......Done!"
+    else
+        log yellow "Building cryptogen"
+        log yellow "===> make -C $FABRIC_ROOT release"
+        make -C $FABRIC_ROOT release
+        log green "make crypto......Done!"
+    fi
 
-	echo
-	echo "##########################################################"
-	echo "##### Generate certificates using cryptogen tool #########"
-	echo "##########################################################"
+    echo
+    echo "##########################################################"
+    echo "##### Generate certificates using cryptogen tool #########"
+    echo "##########################################################"
 
-	log yellow "==> cryptogen generate --config=./$CRYPTO_CONFIG_FILE --output=./$CRYPTO_CONFIG_LOCATION"
-	$CRYPTOGEN generate --config=./$CRYPTO_CONFIG_FILE --output=./$CRYPTO_CONFIG_LOCATION
-	
-	log green "generate crypto......Done!"
-	echo
+    log yellow "==> cryptogen generate --config=./$CRYPTO_CONFIG_FILE --output=./$CRYPTO_CONFIG_LOCATION"
+    $CRYPTOGEN generate --config=./$CRYPTO_CONFIG_FILE --output=./$CRYPTO_CONFIG_LOCATION
+    
+    log green "generate crypto......Done!"
+    echo
 }
 
 ## Generate orderer genesis block , channel configuration transaction and anchor peer update transactions
 function checkConfigtxgen() {
-	CONFIGTXGEN=$FABRIC_ROOT/release/$OS_ARCH/bin/configtxgen
-	
-	if [ -f "$CONFIGTXGEN" ]; then
+    CONFIGTXGEN=$FABRIC_ROOT/release/$OS_ARCH/bin/configtxgen
+    
+    if [ -f "$CONFIGTXGEN" ]; then
         log yellow "Using configtxgen -> $CONFIGTXGEN"
-		
-		log green "check Configtxgen......Done!"
-	else
-	    log yellow "Building configtxgen"
-	    log yellow "===> make -C $FABRIC_ROOT release"
-	    make -C $FABRIC_ROOT release
-		
-		log green "make Configtxgen......Done!"
-	fi
+        
+        log green "check Configtxgen......Done!"
+    else
+        log yellow "Building configtxgen"
+        log yellow "===> make -C $FABRIC_ROOT release"
+        make -C $FABRIC_ROOT release
+        
+        log green "make Configtxgen......Done!"
+    fi
 }
 
 function generateGenesisBlock() {
-	echo
-	echo "##########################################################"
-	echo "#########  Generating Orderer Genesis block ##############"
-	echo "##########################################################"
-	# Note: For some unknown reason (at least for now) the block file can't be
-	# named orderer.genesis.block or the orderer will fail to launch!
-	log yellow "==> cryptogen -profile TwoOrgsOrdererGenesis${version} -outputBlock ./$CHANNEL_ARTIFACTS_LOCATION/genesis.block"
-	$CONFIGTXGEN -profile TwoOrgsOrdererGenesis${version} -outputBlock ./$CHANNEL_ARTIFACTS_LOCATION/genesis.block
-	
-	log green "generate genesis.block......Done!"
-	echo
+    echo
+    echo "##########################################################"
+    echo "#########  Generating Orderer Genesis block ##############"
+    echo "##########################################################"
+    # Note: For some unknown reason (at least for now) the block file can't be
+    # named orderer.genesis.block or the orderer will fail to launch!
+    log yellow "==> cryptogen -profile TwoOrgsOrdererGenesis${version} -outputBlock ./$CHANNEL_ARTIFACTS_LOCATION/genesis.block"
+    $CONFIGTXGEN -profile TwoOrgsOrdererGenesis${version} -outputBlock ./$CHANNEL_ARTIFACTS_LOCATION/genesis.block
+    
+    log green "generate genesis.block......Done!"
+    echo
 }
 
 function generateChannelArtifacts() {
-	echo
-	echo "#################################################################"
-	echo "### Generating channel configuration transaction 'channel.tx' ###"
-	echo "#################################################################"
-	
-	for channel in "$@"; do
-		log yellow "==> cryptogen -profile TwoOrgsChannel${version} -outputCreateChannelTx ./$CHANNEL_ARTIFACTS_LOCATION/$channel.tx -channelID $channel"
-		$CONFIGTXGEN -profile TwoOrgsChannel${version} -outputCreateChannelTx ./$CHANNEL_ARTIFACTS_LOCATION/$channel.tx -channelID $channel
-		log green "generate channel [$channel]......Done!"
-		echo
-		
-		if [ $generateAnchorPeer == "true" ]; then
-			generateAnchorPeerArtifacts $channel
-		fi
-	done	
+    echo
+    echo "#################################################################"
+    echo "### Generating channel configuration transaction 'channel.tx' ###"
+    echo "#################################################################"
+    
+    for channel in "$@"; do
+        log yellow "==> cryptogen -profile TwoOrgsChannel${version} -outputCreateChannelTx ./$CHANNEL_ARTIFACTS_LOCATION/$channel.tx -channelID $channel"
+        $CONFIGTXGEN -profile TwoOrgsChannel${version} -outputCreateChannelTx ./$CHANNEL_ARTIFACTS_LOCATION/$channel.tx -channelID $channel
+        log green "generate channel [$channel]......Done!"
+        echo
+        
+        if [ $generateAnchorPeer == "true" ]; then
+            generateAnchorPeerArtifacts $channel
+        fi
+    done    
 }
 
 function generateAnchorPeerArtifacts() {
-	echo
-	echo "#################################################################"
-	echo "#######    Generating anchor peer update for Org1MSP   ##########"
-	echo "#################################################################"
-	log yellow "==> cryptogen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./$CHANNEL_ARTIFACTS_LOCATION/Org1MSPanchors.tx -channelID $1 -asOrg Org1MSP"
-	$CONFIGTXGEN -profile TwoOrgsChannel -outputAnchorPeersUpdate ./$CHANNEL_ARTIFACTS_LOCATION/Org1MSPanchors.tx -channelID $1 -asOrg Org1MSP
-	
-	log green "generate anchor peer[Org1MSP]......Done!"
+    echo
+    echo "#################################################################"
+    echo "#######    Generating anchor peer update for Org1MSP   ##########"
+    echo "#################################################################"
+    log yellow "==> cryptogen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./$CHANNEL_ARTIFACTS_LOCATION/Org1MSPanchors.tx -channelID $1 -asOrg Org1MSP"
+    $CONFIGTXGEN -profile TwoOrgsChannel -outputAnchorPeersUpdate ./$CHANNEL_ARTIFACTS_LOCATION/Org1MSPanchors.tx -channelID $1 -asOrg Org1MSP
+    
+    log green "generate anchor peer[Org1MSP]......Done!"
 
-	echo
-	echo "#################################################################"
-	echo "#######    Generating anchor peer update for Org2MSP   ##########"
-	echo "#################################################################"
-	log yellow "==> cryptogen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./$CHANNEL_ARTIFACTS_LOCATION/Org2MSPanchors.tx -channelID $1 -asOrg Org2MSP"
-	$CONFIGTXGEN -profile TwoOrgsChannel -outputAnchorPeersUpdate ./$CHANNEL_ARTIFACTS_LOCATION/Org2MSPanchors.tx -channelID $1 -asOrg Org2MSP
-	
-	log green "generate anchor peer[Org2MSP]......Done!"
-	echo
+    echo
+    echo "#################################################################"
+    echo "#######    Generating anchor peer update for Org2MSP   ##########"
+    echo "#################################################################"
+    log yellow "==> cryptogen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./$CHANNEL_ARTIFACTS_LOCATION/Org2MSPanchors.tx -channelID $1 -asOrg Org2MSP"
+    $CONFIGTXGEN -profile TwoOrgsChannel -outputAnchorPeersUpdate ./$CHANNEL_ARTIFACTS_LOCATION/Org2MSPanchors.tx -channelID $1 -asOrg Org2MSP
+    
+    log green "generate anchor peer[Org2MSP]......Done!"
+    echo
 }
 
 function cleanChannelArtifacts() {
 
     echo
-	echo "#################################################################"
-	echo "#######            clean channel artifacts             ##########"
-	echo "#################################################################"
+    echo "#################################################################"
+    echo "#######            clean channel artifacts             ##########"
+    echo "#################################################################"
 
-	
-	log yellow "==> rm -rf ./$VERSION_DIR/"
+    
+    log yellow "==> rm -rf ./$VERSION_DIR/"
     [ -n $VERSION_DIR ] && [ -d "./$VERSION_DIR" ] && rm -rf ./$VERSION_DIR
 
-	log yellow "==> rm -rf ./channel-artifacts ./crypto-config ../docker-compose-e2e-${VERSION_DIR}.yaml"
+    log yellow "==> rm -rf ./channel-artifacts ./crypto-config ../docker-compose-e2e-${VERSION_DIR}.yaml"
     rm -rf ./channel-artifacts ./crypto-config ../docker-compose-e2e-${VERSION_DIR}.yaml
     
-	log green "clean all......Done!"
+    log green "clean all......Done!"
     echo
 }
 
 function createChannelArtifactsDir() {
 
     echo
-	echo "#################################################################"
-	echo "#######       create channel artifacts directory       ##########"
-	echo "#################################################################"
+    echo "#################################################################"
+    echo "#######       create channel artifacts directory       ##########"
+    echo "#################################################################"
 
     log yellow "==> mkdir ./channel-artifacts"
-	[ ! -d "./channel-artifacts" ] && mkdir -pv ./channel-artifacts 
+    [ ! -d "./channel-artifacts" ] && mkdir -pv ./channel-artifacts 
 
     log yellow "==> mkdir ./crypto-config"
-	[ ! -d "./crypto-config" ] && mkdir -pv ./crypto-config 
+    [ ! -d "./crypto-config" ] && mkdir -pv ./crypto-config 
     
-	log green "create directory......Done!"
+    log green "create directory......Done!"
     echo
 }
 
 function mergeArtifactsCryptoDir() {
-	echo
-	echo "#################################################################"
-	echo "#######            merge channel artifacts  files      ##########"
-	echo "#################################################################"
+    echo
+    echo "#################################################################"
+    echo "#######            merge channel artifacts  files      ##########"
+    echo "#################################################################"
 
-	log yellow "==> mkdir ./channel-artifacts"
-	[ ! -d "./$VERSION_DIR" ] && mkdir -pv ./$VERSION_DIR
-	
-	echo "==> mv ./channel-artifacts ./$VERSION_DIR/"
+    log yellow "==> mkdir ./channel-artifacts"
+    [ ! -d "./$VERSION_DIR" ] && mkdir -pv ./$VERSION_DIR
+    
+    echo "==> mv ./channel-artifacts ./$VERSION_DIR/"
     mv -v ./channel-artifacts ./$VERSION_DIR/
 
-	echo "==> mv ./crypto-config ./$VERSION_DIR/"
+    echo "==> mv ./crypto-config ./$VERSION_DIR/"
     mv -v ./crypto-config ./$VERSION_DIR/
 
-	log green "merge files......Done!"
+    log green "merge files......Done!"
     echo
 }
 
 function copyArtifactsCryptoDir() {
-	echo
-	echo "#################################################################"
-	echo "#######     copy channel artifacts & crypto  files     ##########"
-	echo "#################################################################"
+    echo
+    echo "#################################################################"
+    echo "#######     copy channel artifacts & crypto  files     ##########"
+    echo "#################################################################"
 
-	log yellow "==> mkdir ./channel-artifacts"
-	[ ! -d "./$VERSION_DIR" ] && mkdir -pv ./$VERSION_DIR
-	
-	echo "==> mv ./channel-artifacts ./$VERSION_DIR/"
+    log yellow "==> mkdir ./channel-artifacts"
+    [ ! -d "./$VERSION_DIR" ] && mkdir -pv ./$VERSION_DIR
+    
+    echo "==> mv ./channel-artifacts ./$VERSION_DIR/"
     cp -aurv ./channel-artifacts ./$VERSION_DIR/
 
-	echo "==> mv ./crypto-config ./$VERSION_DIR/"
+    echo "==> mv ./crypto-config ./$VERSION_DIR/"
     cp -aurv ./crypto-config ./$VERSION_DIR/
 
-	log green "copy files......Done!"
+    log green "copy files......Done!"
     echo
 }
 
 function fetchRequiredChannelArtifacts() {
     echo
-	echo "#################################################################"
-	echo "#######       fetch channel artifacts directory       ##########"
-	echo "#################################################################"
+    echo "#################################################################"
+    echo "#######       fetch channel artifacts directory       ##########"
+    echo "#################################################################"
 
-	requiredFiles="crypto-config/peerOrganizations/org1.foo.com/msp/cacerts"
-	requiredFiles="crypto-config"
-	
-	if [ ! -d "$requiredFiles" ]; then
-		log yellow "==> mkdir $requiredFiles"
-		
-		mkdir -pv $requiredFiles
-		cp -aur "./$VERSION_DIR/$requiredFiles" .
-	else
-		log yellow "==> exist required file: $requiredFiles"
-	fi
+    requiredFiles="crypto-config/peerOrganizations/org1.foo.com/msp/cacerts"
+    requiredFiles="crypto-config"
+    
+    if [ ! -d "$requiredFiles" ]; then
+        log yellow "==> mkdir $requiredFiles"
+        
+        mkdir -pv $requiredFiles
+        cp -aur "./$VERSION_DIR/$requiredFiles" .
+    else
+        log yellow "==> exist required file: $requiredFiles"
+    fi
     
     log green "fetch files......Done!"
-	echo
+    echo
 }
 
 function moveIncrementChannelArtifacts() {
-	echo
-	echo "#################################################################"
-	echo "#######    move increment channel artifacts file       ##########"
-	echo "#################################################################"
+    echo
+    echo "#################################################################"
+    echo "#######    move increment channel artifacts file       ##########"
+    echo "#################################################################"
 
-	log yellow "==> mv ./channel-artifacts/* ./$VERSION_DIR/channel-artifacts"
+    log yellow "==> mv ./channel-artifacts/* ./$VERSION_DIR/channel-artifacts"
     mv -iv ./channel-artifacts/* ./$VERSION_DIR/channel-artifacts
-	log green "move files......Done!"
-	echo
-	
-	log yellow "==> rm -rf ./channel-artifacts ./crypto-config"
+    log green "move files......Done!"
+    echo
+    
+    log yellow "==> rm -rf ./channel-artifacts ./crypto-config"
     rm -rf ./channel-artifacts ./crypto-config
-	log green "clean files......Done!"
+    log green "clean files......Done!"
     
     echo
 }
@@ -311,27 +320,27 @@ printf "\n\n"
 
 while getopts ":c:v:hau" opt; do
 
-	#printf "选项：%s, 参数值：$OPTARG \n" $opt
+    #printf "选项：%s, 参数值：$OPTARG \n" $opt
     case $opt in
-    	c ) 
-			CHANNEL_NAME="$CHANNEL_NAME $OPTARG"
-		;;
-		v ) 			
-			VERSION_DIR="$OPTARG"
-			version=`echo $VERSION_DIR | sed 's/\.//g'`
-			if [[ $VERSION_DIR =~ "v" ]]; then
-				version=_$version
-			else
-				log red "not contains version char 'v'"
-				version=_v$version
-			fi
-		;;
-		a|u ) 
-			generateAnchorPeer="true"
-		;;
-		h ) 
-			usageHelp
-		;;        
+        c ) 
+            CHANNEL_NAME="$CHANNEL_NAME $OPTARG"
+        ;;
+        v )             
+            VERSION_DIR="$OPTARG"
+            version=`echo $VERSION_DIR | sed 's/\.//g'`
+            if [[ $VERSION_DIR =~ "v" ]]; then
+                version=_$version
+            else
+                log red "not contains version char 'v'"
+                version=_v$version
+            fi
+        ;;
+        a|u ) 
+            generateAnchorPeer="true"
+        ;;
+        h ) 
+            usageHelp
+        ;;        
         ? ) echo "error" exit 1;;
     esac
 done
@@ -360,50 +369,55 @@ log purple "VERSION: $version"
 log purple "VERSION_DIR: $VERSION_DIR"
 
 
+# check args
+# ------------------------------------------------------------------------------
+validateArgs
+
+
 # process
 # ------------------------------------------------------------------------------
 for opt in "$@"; do
-	case "$opt" in
+    case "$opt" in
         clean)
             cleanChannelArtifacts
         ;;
         gen)
-			checkConfigtxgen
+            checkConfigtxgen
             createChannelArtifactsDir
             generateCerts
-			replacePrivateKey
-			generateGenesisBlock
+            replacePrivateKey
+            generateGenesisBlock
 
-			generateChannelArtifacts $CHANNEL_NAME
-			#generateAnchorPeerArtifacts
+            generateChannelArtifacts $CHANNEL_NAME
+            #generateAnchorPeerArtifacts
         ;;
         gen-channel)
-			checkConfigtxgen
-			fetchRequiredChannelArtifacts
-			createChannelArtifactsDir
+            checkConfigtxgen
+            fetchRequiredChannelArtifacts
+            createChannelArtifactsDir
             generateChannelArtifacts $CHANNEL_NAME
-			moveIncrementChannelArtifacts
+            moveIncrementChannelArtifacts
         ;;
         merge)
             mergeArtifactsCryptoDir
         ;;
-		copy)
+        copy)
             copyArtifactsCryptoDir
         ;;
         regen)
             cleanChannelArtifacts
             
-			checkConfigtxgen
+            checkConfigtxgen
             createChannelArtifactsDir
             generateCerts
-			replacePrivateKey
-			generateGenesisBlock
+            replacePrivateKey
+            generateGenesisBlock
 
-			generateChannelArtifacts $CHANNEL_NAME
+            generateChannelArtifacts $CHANNEL_NAME
         ;;
         *)
             usageHelp
             exit 1
         ;;
     esac        
-done	
+done    
