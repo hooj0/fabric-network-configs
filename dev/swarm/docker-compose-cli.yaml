@@ -1,0 +1,172 @@
+version: '2.1'
+
+networks:
+  fabric-net:
+
+services:
+  zookeeper0:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: zookeeper
+    environment:
+      - ZOO_MY_ID=1
+    networks:
+      - fabric-net
+
+  zookeeper1:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: zookeeper
+    environment:
+      - ZOO_MY_ID=2
+    networks:
+      - fabric-net  
+
+  zookeeper2:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: zookeeper
+    environment:
+      - ZOO_MY_ID=3
+    networks:
+      - fabric-net  
+
+  kafka0:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: kafka
+    environment:
+      - KAFKA_BROKER_ID=0
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      - fabric-net  
+
+  kafka1:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      - fabric-net  
+
+  kafka2:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: kafka
+    environment:
+      - KAFKA_BROKER_ID=2
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      - fabric-net  
+
+  kafka3:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: kafka
+    environment:
+      - KAFKA_BROKER_ID=3
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      - fabric-net  
+
+  orderer:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: orderer.simple.com
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+      - kafka0
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      fabric-net:
+        aliases:
+          - orderer.simple.com
+
+  peer0-org1:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: peer0.org1.foo.com
+    depends_on:
+      - orderer
+    networks:
+      fabric-net:
+        aliases:
+          - peer0.org1.foo.com   
+
+  peer1-org1:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: peer1.org1.foo.com
+    depends_on:
+      - orderer
+      - peer0-org1 
+    networks:
+      fabric-net:
+        aliases:
+          - peer1.org1.foo.com  
+
+  peer0-org2:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: peer0.org2.bar.com
+    depends_on:
+      - orderer
+    networks:
+      fabric-net:
+        aliases:
+          - peer0.org2.bar.com  
+
+  peer1-org2:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: peer1.org2.bar.com
+    depends_on:
+      - orderer
+      - peer0-org2
+    networks:
+      fabric-net:
+        aliases:
+          - peer1.org2.bar.com  
+  
+  cli:
+    extends:
+      file: base/base-cli.yaml
+      service: cli-base
+    environment:
+      - CORE_PEER_ADDRESS=peer0.org1.foo.com:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_TLS_ENABLED=${HYPERLEDGER_FABRIC_ENABLE_TLS}
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.foo.com/peers/peer0.org1.foo.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.foo.com/peers/peer0.org1.foo.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.foo.com/peers/peer0.org1.foo.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.foo.com/users/Admin@org1.foo.com/msp
+    command: /bin/bash -c "./scripts/script.sh ${CHANNEL_NAME}; sleep $TIMEOUT"
+    volumes:
+      - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ./chaincode/go/:/opt/gopath/src/github.com/hyperledger/fabric/examples/chaincode/go
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - orderer
+      - peer0-org1
+      - peer1-org1
+      - peer0-org2
+      - peer1-org2
