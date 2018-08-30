@@ -1,0 +1,35 @@
+version: "2.1"
+
+networks:  
+  monitor-net:    
+    external:
+      name: fabric-net
+      
+services:
+  visualizer:
+    extends:
+      file: base/base-visualizer.yaml
+      service: visualizer-base
+    
+    networks:
+      - monitor-net
+      
+    ports:
+      - "3100:8080"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+      resources:  
+        limits:
+          cpus: '0.05'
+          memory: 500M
+        reservations:
+          cpus: '0.01'
+          memory: 500M    
