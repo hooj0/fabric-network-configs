@@ -1,0 +1,166 @@
+version: '2.1'
+
+services:
+  # 0.1
+  ca0:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.05"
+          memory: 500M
+      restart_policy:
+        condition: on-failure
+
+  ca1:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.05"
+          memory: 500M
+      restart_policy:
+        condition: on-failure
+  
+  # 0.15  
+  zookeeper0:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.05"
+          memory: 1000M
+      restart_policy:
+        condition: on-failure
+
+  zookeeper1:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.05"
+          memory: 1000M
+      restart_policy:
+        condition: on-failure
+
+  zookeeper2:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.05"
+          memory: 1000M
+      restart_policy:
+        condition: on-failure
+  
+  # 0.2
+  kafka0:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.05"
+          memory: 1000M
+      restart_policy:
+        condition: on-failure
+
+  kafka1:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.05"
+          memory: 1000M
+      restart_policy:
+        condition: on-failure
+
+  kafka2:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.05"
+          memory: 1000M
+      restart_policy:
+        condition: on-failure
+
+  kafka3:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.05"
+          memory: 1000M
+      restart_policy:
+        condition: on-failure
+
+  #### 0.5
+  orderer:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 2000M
+      restart_policy:
+        condition: on-failure
+
+  peer0-org1:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 1500M
+      restart_policy:
+        condition: on-failure
+
+  peer1-org1:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 1500M
+      restart_policy:
+        condition: on-failure
+
+  peer0-org2:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 1500M
+      restart_policy:
+        condition: on-failure
+
+  peer1-org2:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 1500M
+      restart_policy:
+        condition: on-failure
+  
+  configtxlator:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.025"
+          memory: 500M
+      restart_policy:
+        condition: on-failure
+
+  ccenv:
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.075"
+          memory: 1000M
+      restart_policy:
+        condition: on-failure
