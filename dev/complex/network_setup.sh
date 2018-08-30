@@ -213,11 +213,11 @@ validateArgs $@
 # usage options
 # -------------------------------------------------------------------------------
 printf "\n\n"
-echo "参数列表：$*"
+#echo "参数列表：$*"
 
 while getopts ":f:n:t:cedmhv" opt; do
 
-    printf "选项：%s, 参数值：$OPTARG \n" $opt
+    #printf "选项：%s, 参数值：$OPTARG \n" $opt
     case $opt in
         c ) 
             COMPOSE_FILE=docker-compose-cli.yaml
@@ -251,7 +251,7 @@ while getopts ":f:n:t:cedmhv" opt; do
 done
 
 shift $(($OPTIND - 1))
-echo "命令参数：$*"
+#echo "命令参数：$*"
 
 
 # varibles
