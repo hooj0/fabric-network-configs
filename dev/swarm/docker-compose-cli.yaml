@@ -1,7 +1,7 @@
 version: '2.1'
 
 networks:
-  fabric-net:
+  blockchain-net:
 
 services:
   zookeeper0:
@@ -11,7 +11,7 @@ services:
     environment:
       - ZOO_MY_ID=1
     networks:
-      - fabric-net
+      - blockchain-net
 
   zookeeper1:
     extends:
@@ -20,7 +20,7 @@ services:
     environment:
       - ZOO_MY_ID=2
     networks:
-      - fabric-net  
+      - blockchain-net  
 
   zookeeper2:
     extends:
@@ -29,7 +29,7 @@ services:
     environment:
       - ZOO_MY_ID=3
     networks:
-      - fabric-net  
+      - blockchain-net  
 
   kafka0:
     extends:
@@ -42,7 +42,7 @@ services:
       - zookeeper1
       - zookeeper2
     networks:
-      - fabric-net  
+      - blockchain-net  
 
   kafka1:
     extends:
@@ -55,7 +55,7 @@ services:
       - zookeeper1
       - zookeeper2
     networks:
-      - fabric-net  
+      - blockchain-net  
 
   kafka2:
     extends:
@@ -68,7 +68,7 @@ services:
       - zookeeper1
       - zookeeper2
     networks:
-      - fabric-net  
+      - blockchain-net  
 
   kafka3:
     extends:
@@ -81,7 +81,7 @@ services:
       - zookeeper1
       - zookeeper2
     networks:
-      - fabric-net  
+      - blockchain-net  
 
   orderer:
     extends:
@@ -96,7 +96,7 @@ services:
       - kafka2
       - kafka3
     networks:
-      fabric-net:
+      blockchain-net:
         aliases:
           - orderer.simple.com
 
@@ -107,7 +107,7 @@ services:
     depends_on:
       - orderer
     networks:
-      fabric-net:
+      blockchain-net:
         aliases:
           - peer0.org1.foo.com   
 
@@ -119,7 +119,7 @@ services:
       - orderer
       - peer0-org1 
     networks:
-      fabric-net:
+      blockchain-net:
         aliases:
           - peer1.org1.foo.com  
 
@@ -130,7 +130,7 @@ services:
     depends_on:
       - orderer
     networks:
-      fabric-net:
+      blockchain-net:
         aliases:
           - peer0.org2.bar.com  
 
@@ -142,7 +142,7 @@ services:
       - orderer
       - peer0-org2
     networks:
-      fabric-net:
+      blockchain-net:
         aliases:
           - peer1.org2.bar.com  
   

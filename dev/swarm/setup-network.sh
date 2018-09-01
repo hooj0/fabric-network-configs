@@ -4,6 +4,7 @@ COMPOSE_FILE=docker-compose-cli.yaml
 COMPOSE_FILE_COUCH=docker-compose-couch.yaml
 COMPOSE_FILE_MONITORING=docker-compose-prom.yaml
 COMPOSE_FILE_VISUALIZER=docker-compose-visualizer.yaml
+COMPOSE_FILE_DEPLOY=docker-compose-fabric-deploy.yaml
 
 function printHelp () {
 cat << HELP
@@ -16,15 +17,19 @@ OPTIONS:
   -t     CLI_TIMEOUT, docker-compose cli required request timeout(default: 10000)
   -c     cli mode: run docker-compose command start, use docker-compose-cli.yaml
   -e     e2e mode: run docker-compose command start, use docker-compose-fabric-*.yaml
-  -d     add couchdb container, use docker-compose-couchdb.yaml
-  -v     add visualizer container, use docker-compose-visualizer.yaml
-  -m     add prom monitor container, use ${COMPOSE_FILE_MONITORING}
+  -s     swarm mode: use deploy config service, use ${COMPOSE_FILE_DEPLOY}
+  -d     add couchdb service, use docker-compose-couchdb.yaml
+  -v     add visualizer service, use docker-compose-visualizer.yaml
+  -m     add prom monitor service, use ${COMPOSE_FILE_MONITORING}
+
 
 COMMANDS:
   up          start docker container & create container/network/images
   down        stop(kill) docker container & clean container/network/images resources
   restart     run the down command and then run the up command.
   clean       clean docker network & container & images resources
+  deploy      deploy fabric service stack swarm
+  remove      remove fabric service stack swarm
   help        use the help manual.
     
 EXAMPLES: 
@@ -42,6 +47,9 @@ EXAMPLES:
   $0 -e -d -v -m up
   $0 -edvm up
   $0 -edvm clean up
+
+  $0 -edvms deploy
+  $0 -edvms remove
   
 HELP
 exit 0
@@ -137,10 +145,8 @@ function cleanNetwork() {
     echo
 }
 
-function networkUp () {
-    log yellow "######################## start fabric network ######################## "
-    
-    if [ ! -d "./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config" ]; then
+function checkNetworkConfigs() {
+  if [ ! -d "./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config" ]; then
       log red "fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config directory not exists."
       #source ./fabric-configs/generate.sh -v ${FABRIC_NETWORK_CONFIGTX_VERSION} -c ${CHANNEL_NAME} clean gen merge
       log _blue "\nPlease generate the required [crypto-config] files\nExample:"
@@ -155,17 +161,20 @@ function networkUp () {
       log _blue "\t cd fabric-configs \n\t sudo sh generate.sh -v ${FABRIC_NETWORK_CONFIGTX_VERSION} -c ${CHANNEL_NAME} gen-channel"
       exit 1
     fi
+}
+
+
+function networkUp () {
+    log yellow "######################## start fabric network ######################## "
+    
+    checkNetworkConfigs
 
     if [ ! -z "${REPLENISH_COMPOSE_FILE}" ]; then
       log purple "==> docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE up -d "
       docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE up
-      #docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE > docker-compose.stack.yml
-      #docker stack deploy --compose-file $COMPOSE_FILE $REPLENISH_COMPOSE_FILE fabric
     else
       log purple "==> docker-compose -f $COMPOSE_FILE up -d "
       docker-compose -f $COMPOSE_FILE up
-      #docker-compose -f $COMPOSE_FILE > docker-compose.stack.yml
-      #docker stack deploy --compose-file $COMPOSE_FILE fabric
     fi
 
     #if [ $? -ne 0 ]; then
@@ -202,12 +211,49 @@ function networkDown () {
     echo
 } 
 
-function deploy() {
-    log yellow "#################### stop & remove fabric network #################### "
+function deployStack() {
+    log yellow "################ deploy services stack fabric network ################# "
+
+    checkNetworkConfigs
+    
+    if [ "${ENABLED_MONITOR}" == "true" ]; then
+        ADMIN_USER=admin \
+        ADMIN_PASSWORD=admin \
+        SLACK_URL=https://hooks.slack.com/services/TOKEN \
+        SLACK_CHANNEL=devops-alerts \
+        SLACK_USER=alertmanager \
+        docker stack deploy -c ${COMPOSE_FILE_MONITORING} monitor
+    fi
+
+    if [ ! -z "${REPLENISH_COMPOSE_FILE}" ]; then
+      log purple "==> docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE config > docker-compose.stack.yml"      
+      docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE config > docker-compose.stack.yml
+      #docker stack deploy --compose-file $COMPOSE_FILE $REPLENISH_COMPOSE_FILE fabric
+    else
+      log purple "==> docker-compose -f $COMPOSE_FILE config > docker-compose.stack.yml"
+      docker-compose -f $COMPOSE_FILE config > docker-compose.stack.yml
+      #docker stack deploy --compose-file $COMPOSE_FILE fabric
+    fi
+
 
     if [ -f "docker-compose.stack.yml" ]; then
-      docker stack deploy -c docker-compose.stack.yml fabric
+      docker stack deploy -c docker-compose.stack.yml fabric      
     fi
+
+    if [ "${ENABLED_MONITOR}" == "true" ]; then
+        docker service logs monitor   
+    fi       
+    docker service logs fabric
+}
+
+
+function removeStack() {
+    log yellow "################ remove services stack fabric network ################# "
+
+    if [ "${ENABLED_MONITOR}" == "true" ]; then
+        docker stack rm monitor fabric    
+    fi    
+    docker stack rm fabric
 }
 
 
@@ -227,7 +273,7 @@ validateArgs $@
 printf "\n\n"
 echo "参数列表：$*"
 
-while getopts ":f:n:t:cedmhv" opt; do
+while getopts ":f:n:t:cedmhvs" opt; do
 
     printf "选项：%s, 参数值：$OPTARG \n" $opt
     case $opt in
@@ -252,8 +298,11 @@ while getopts ":f:n:t:cedmhv" opt; do
         v ) 
             REPLENISH_COMPOSE_FILE="${REPLENISH_COMPOSE_FILE} -f ${COMPOSE_FILE_VISUALIZER}"
         ;;
+        s ) 
+            REPLENISH_COMPOSE_FILE="${REPLENISH_COMPOSE_FILE} -f ${COMPOSE_FILE_DEPLOY}"
+        ;;
         m ) 
-            REPLENISH_COMPOSE_FILE="${REPLENISH_COMPOSE_FILE} -f ${COMPOSE_FILE_MONITORING}"
+            ENABLED_MONITOR="true"            
         ;;
         h ) 
             printHelp
@@ -270,6 +319,7 @@ echo "命令参数：$*"
 #--------------------------------------------------------------------------
 REPLENISH_COMPOSE_FILE="$(echo $REPLENISH_COMPOSE_FILE)"
 
+: ${ENABLED_MONITOR:="false"}
 : ${CHANNEL_NAME:="mychannel"}
 : ${CLI_TIMEOUT:="10000"}
 
@@ -303,8 +353,10 @@ for opt in $*; do
             cleanNetwork
         ;;
         deploy)
-            networkDown
-            deploy
+            deployStack
+        ;;
+        remove)
+            removeStack
         ;;
         *)
             printHelp

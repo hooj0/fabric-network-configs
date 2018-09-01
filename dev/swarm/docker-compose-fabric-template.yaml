@@ -1,7 +1,9 @@
 version: '2.1'
 
 networks:
-  fabric-net:
+  blockchain_net:
+    driver: overlay
+    attachable: true
 
 services:
   ca0:
@@ -19,7 +21,7 @@ services:
     volumes:
       - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.foo.com/ca/:/etc/hyperledger/fabric-ca-server-config:ro
     networks:
-      fabric-net:
+      blockchain_net:
         aliases:
           - ca.foo.com    
 
@@ -38,7 +40,7 @@ services:
     volumes:
       - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.bar.com/ca/:/etc/hyperledger/fabric-ca-server-config:ro
     networks:
-      fabric-net:
+      blockchain_net:
         aliases:
           - ca.bar.com  
       
@@ -49,7 +51,7 @@ services:
     environment:
       - ZOO_MY_ID=1
     networks:
-      - fabric-net
+      - blockchain_net
 
   zookeeper1:
     extends:
@@ -58,7 +60,7 @@ services:
     environment:
       - ZOO_MY_ID=2
     networks:
-      - fabric-net  
+      - blockchain_net  
 
   zookeeper2:
     extends:
@@ -67,7 +69,7 @@ services:
     environment:
       - ZOO_MY_ID=3
     networks:
-      - fabric-net  
+      - blockchain_net  
 
   kafka0:
     extends:
@@ -80,7 +82,7 @@ services:
       - zookeeper1
       - zookeeper2
     networks:
-      - fabric-net  
+      - blockchain_net  
 
   kafka1:
     extends:
@@ -93,7 +95,7 @@ services:
       - zookeeper1
       - zookeeper2
     networks:
-      - fabric-net  
+      - blockchain_net  
 
   kafka2:
     extends:
@@ -106,7 +108,7 @@ services:
       - zookeeper1
       - zookeeper2
     networks:
-      - fabric-net  
+      - blockchain_net  
 
   kafka3:
     extends:
@@ -119,7 +121,7 @@ services:
       - zookeeper1
       - zookeeper2
     networks:
-      - fabric-net  
+      - blockchain_net  
 
   orderer:
     extends:
@@ -134,7 +136,7 @@ services:
       - kafka2
       - kafka3
     networks:
-      fabric-net:
+      blockchain_net:
         aliases:
           - orderer.simple.com
 
@@ -145,7 +147,7 @@ services:
     depends_on:
       - orderer
     networks:
-      fabric-net:
+      blockchain_net:
         aliases:
           - peer0.org1.foo.com   
 
@@ -157,7 +159,7 @@ services:
       - orderer
       - peer0-org1 
     networks:
-      fabric-net:
+      blockchain_net:
         aliases:
           - peer1.org1.foo.com  
 
@@ -168,7 +170,7 @@ services:
     depends_on:
       - orderer
     networks:
-      fabric-net:
+      blockchain_net:
         aliases:
           - peer0.org2.bar.com  
 
@@ -180,7 +182,7 @@ services:
       - orderer
       - peer0-org2
     networks:
-      fabric-net:
+      blockchain_net:
         aliases:
           - peer1.org2.bar.com  
   
@@ -190,11 +192,11 @@ services:
       - "7059:7059"
     command: /usr/local/bin/configtxlator start
     networks:
-      fabric-net:
+      blockchain_net:
         aliases:
           - configtxlator.com
 
   ccenv:
     image: hyperledger/fabric-ccenv${IMAGE_TAG_FABRIC}
     networks:
-      - fabric-net
+      - blockchain_net
