@@ -1,0 +1,119 @@
+version: "3.6"
+
+#-----------------------------------------------------------------------------------
+# base service yaml
+#-----------------------------------------------------------------------------------
+x-base-services:
+  zookeeper: &zookeeper-base
+    image: hyperledger/fabric-zookeeper${IMAGE_TAG_FABRIC_ZOOKEEPER}    
+    environment: &zookeeper-env-common
+      ZOO_SERVERS: "server.1=${dev-010}:2888:3888 server.2=${dev-020}:2888:3888 server.3=${dev-040}:2888:3888"
+    ports:
+      - target: 2181
+        published: 2181
+        protocol: tcp
+        mode: host
+      - target: 2888
+        published: 2888
+        protocol: tcp
+        mode: host
+      - target: 3888
+        published: 3888
+        protocol: tcp
+        mode: host    
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 3000M
+      restart_policy:
+        condition: on-failure    
+    
+  kafka: &kafka-base
+    image: hyperledger/fabric-kafka${IMAGE_TAG_FABRIC_KAFKA}    
+    environment: &kafka-env-common
+      KAFKA_MESSAGE_MAX_BYTES: 103809024 # 99 * 1024 * 1024 B
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 103809024 # 99 * 1024 * 1024 B
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: false
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper0:2181,zookeeper1:2181,zookeeper2:2181"
+    ports:
+      - 9092    
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 3000M
+      restart_policy:
+        condition: on-failure  
+
+#-----------------------------------------------------------------------------------
+# kafka & zookeeper service yaml
+#-----------------------------------------------------------------------------------
+services:
+  zookeeper0:
+    <<: *zookeeper-base
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == dev-010
+      restart_policy:
+        condition: on-failure  
+    environment:
+      <<: *zookeeper-env-common
+      ZOO_MY_ID: 1
+    
+
+  zookeeper1:
+    <<: *zookeeper-base
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == dev-020
+      restart_policy:
+        condition: on-failure  
+    environment:
+      <<: *zookeeper-env-common
+      ZOO_MY_ID: 2 
+
+  zookeeper2:
+    <<: *zookeeper-base
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == dev-040
+      restart_policy:
+        condition: on-failure  
+    environment:
+      <<: *zookeeper-env-common
+      ZOO_MY_ID: 3  
+
+  kafka0:
+    <<: *kafka-base
+    environment:
+      <<: *kafka-env-common
+      KAFKA_BROKER_ID: 0
+  
+
+  kafka1:
+    <<: *kafka-base
+    environment:
+      <<: *kafka-env-common
+      KAFKA_BROKER_ID: 1
+ 
+
+  kafka2:
+    <<: *kafka-base
+    environment:
+      <<: *kafka-env-common
+      KAFKA_BROKER_ID: 2
+ 
+
+  kafka3:
+    <<: *kafka-base
+    environment:
+      <<: *kafka-env-common
+      KAFKA_BROKER_ID: 3
