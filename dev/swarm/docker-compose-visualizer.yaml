@@ -1,22 +1,27 @@
-version: "2.1"
-
-networks:  
-  #monitor_net:    
-    #external:
-    #  name: fabric-net
-  external_monitor_net:
-    external:
-      name: monitor_net
-      
+version: '3.6'
+   
 services:
   visualizer:
-    extends:
-      file: base/base-visualizer.yaml
-      service: visualizer-base
-    
+    image: registry.cn-hangzhou.aliyuncs.com/qingcheng/visualizer:stable
+    #image: visualizer:stable
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"    
     networks:
-      - external_monitor_net
-      - blockchain_net
-      
+      - blockchain_net      
     ports:
-      - "3100:8080"       
+      - "3100:8080"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:  
+        limits:
+          cpus: '0.25'
+          memory: 1000M
+        reservations:
+          cpus: '0.1'
+          memory: 500M          
