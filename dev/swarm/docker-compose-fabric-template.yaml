@@ -1,19 +1,45 @@
-version: '2.1'
+version: '3.6'
 
+#-----------------------------------------------------------------------------------
+# base service yaml
+#-----------------------------------------------------------------------------------
+x-base-services:
+  ca: &ca-base
+    image: hyperledger/fabric-ca${IMAGE_TAG_FABRIC_CA}
+    environment: &ca-env-common
+      FABRIC_CA_HOME: /etc/hyperledger/fabric-ca-server
+      FABRIC_CA_SERVER_TLS_ENABLED: ${HYPERLEDGER_FABRIC_ENABLE_TLS}
+    expose:
+      - "7054"
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 2000M
+      restart_policy:
+        condition: on-failure   
+
+#-----------------------------------------------------------------------------------
+# networks yaml
+#-----------------------------------------------------------------------------------
 networks:
   blockchain_net:
     driver: overlay
     attachable: true
 
+
+#-----------------------------------------------------------------------------------
+# core service yaml
+#-----------------------------------------------------------------------------------
 services:
   ca0:
-    extends:
-      file: base/base-ca.yaml
-      service: ca-base
+    <<: *ca-base
     environment:
-      - FABRIC_CA_SERVER_CA_NAME=ca-org1
-      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY  
-      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem
+      <<: *ca-env-common
+      FABRIC_CA_SERVER_CA_NAME: ca-org1
+      FABRIC_CA_SERVER_TLS_KEYFILE: /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY  
+      FABRIC_CA_SERVER_TLS_CERTFILE: /etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem
     command: sh -c "fabric-ca-server start ${V11_IDENTITIES_ALLOWREMOVE} ${V11_AFFILIATIONS_ALLOWREMOVE} --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -b admin:adminpw -d"
     #command: sh -c "fabric-ca-server start -n ca-org1 ${V11_IDENTITIES_ALLOWREMOVE} ${V11_AFFILIATIONS_ALLOWREMOVE} --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -b admin:adminpw ${HYPERLEDGER_FABRIC_ENABLE_CA_TLS} --tls.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem --tls.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -d"
     ports:
@@ -23,16 +49,15 @@ services:
     networks:
       blockchain_net:
         aliases:
-          - ca.foo.com    
+          - ca.foo.com           
 
   ca1:
-    extends:
-      file: base/base-ca.yaml
-      service: ca-base
+    <<: *ca-base
     environment:
-      - FABRIC_CA_SERVER_CA_NAME=ca-org2
-      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY
-      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem
+      <<: *ca-env-common
+      FABRIC_CA_SERVER_CA_NAME: ca-org2
+      FABRIC_CA_SERVER_TLS_KEYFILE: /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY
+      FABRIC_CA_SERVER_TLS_CERTFILE: /etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem
     command: sh -c "fabric-ca-server start --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -b admin:adminpw -d"
     #command: sh -c "fabric-ca-server start --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -b admin:adminpw ${HYPERLEDGER_FABRIC_ENABLE_CA_TLS} --tls.certfile /etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem --tls.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -d"
     ports:
@@ -42,145 +67,61 @@ services:
     networks:
       blockchain_net:
         aliases:
-          - ca.bar.com  
-      
+          - ca.bar.com        
+
   zookeeper0:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: zookeeper
-    environment:
-      - ZOO_MY_ID=1
+    networks:
+      - blockchain_net    
+
+  zookeeper1:
     networks:
       - blockchain_net
 
-  zookeeper1:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: zookeeper
-    environment:
-      - ZOO_MY_ID=2
-    networks:
-      - blockchain_net  
-
   zookeeper2:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: zookeeper
-    environment:
-      - ZOO_MY_ID=3
     networks:
-      - blockchain_net  
+      - blockchain_net
 
   kafka0:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: kafka
-    environment:
-      - KAFKA_BROKER_ID=0
-    depends_on:
-      - zookeeper0
-      - zookeeper1
-      - zookeeper2
     networks:
-      - blockchain_net  
+      - blockchain_net 
 
   kafka1:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: kafka
-    environment:
-      - KAFKA_BROKER_ID=1
-    depends_on:
-      - zookeeper0
-      - zookeeper1
-      - zookeeper2
     networks:
-      - blockchain_net  
-
+      - blockchain_net
+ 
   kafka2:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: kafka
-    environment:
-      - KAFKA_BROKER_ID=2
-    depends_on:
-      - zookeeper0
-      - zookeeper1
-      - zookeeper2
     networks:
-      - blockchain_net  
+      - blockchain_net
 
   kafka3:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: kafka
-    environment:
-      - KAFKA_BROKER_ID=3
-    depends_on:
-      - zookeeper0
-      - zookeeper1
-      - zookeeper2
     networks:
-      - blockchain_net  
+      - blockchain_net
 
-  orderer:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: orderer.simple.com
-    depends_on:
-      - zookeeper0
-      - zookeeper1
-      - zookeeper2
-      - kafka0
-      - kafka1
-      - kafka2
-      - kafka3
+  orderer:    
     networks:
       blockchain_net:
         aliases:
           - orderer.simple.com
 
-  peer0-org1:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: peer0.org1.foo.com
-    depends_on:
-      - orderer
+  peer0-org1:    
     networks:
       blockchain_net:
         aliases:
           - peer0.org1.foo.com   
 
-  peer1-org1:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: peer1.org1.foo.com
-    depends_on:
-      - orderer
-      - peer0-org1 
+  peer1-org1:    
     networks:
       blockchain_net:
         aliases:
           - peer1.org1.foo.com  
 
-  peer0-org2:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: peer0.org2.bar.com
-    depends_on:
-      - orderer
+  peer0-org2:    
     networks:
       blockchain_net:
         aliases:
           - peer0.org2.bar.com  
 
-  peer1-org2:
-    extends:
-      file: base/docker-compose-base.yaml
-      service: peer1.org2.bar.com
-    depends_on:
-      - orderer
-      - peer0-org2
+  peer1-org2:    
     networks:
       blockchain_net:
         aliases:
@@ -195,8 +136,24 @@ services:
       blockchain_net:
         aliases:
           - configtxlator.com
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 500M
+      restart_policy:
+        condition: on-failure      
 
   ccenv:
     image: hyperledger/fabric-ccenv${IMAGE_TAG_FABRIC}
     networks:
       - blockchain_net
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 2000M
+      restart_policy:
+        condition: on-failure  
