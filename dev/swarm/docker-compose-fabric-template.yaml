@@ -13,12 +13,13 @@ x-base-services:
       - "7054"
     deploy:
       #replicas: 3
-      resources:
-        limits:
-          cpus: "0.3"
-          memory: 2000M
+      #resources:
+      #  limits:
+      #    cpus: "0.3"
+      #    memory: 2000M
       restart_policy:
         condition: on-failure   
+
 
 #-----------------------------------------------------------------------------------
 # networks yaml
@@ -34,6 +35,7 @@ networks:
 #-----------------------------------------------------------------------------------
 services:
   ca0:
+    container_name: ca.foo.com
     <<: *ca-base
     environment:
       <<: *ca-env-common
@@ -52,6 +54,7 @@ services:
           - ca.foo.com           
 
   ca1:
+    container_name: ca.bar.com
     <<: *ca-base
     environment:
       <<: *ca-env-common
@@ -128,6 +131,7 @@ services:
           - peer1.org2.bar.com  
   
   configtxlator:
+    container_name: configtxlator.com
     image: hyperledger/fabric-tools${IMAGE_TAG_FABRIC}
     ports:
       - "7059:7059"
@@ -138,22 +142,23 @@ services:
           - configtxlator.com
     deploy:
       #replicas: 3
-      resources:
-        limits:
-          cpus: "0.1"
-          memory: 500M
+      #resources:
+      #  limits:
+      #    cpus: "0.1"
+      #    memory: 500M
       restart_policy:
         condition: on-failure      
 
   ccenv:
+    container_name: ccenv
     image: hyperledger/fabric-ccenv${IMAGE_TAG_FABRIC}
     networks:
       - blockchain_net
     deploy:
       #replicas: 3
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 2000M
+      #resources:
+      #  limits:
+      #    cpus: "0.25"
+      #    memory: 2000M
       restart_policy:
         condition: on-failure  
