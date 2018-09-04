@@ -20,21 +20,25 @@ x-base-services:
 #-----------------------------------------------------------------------------------
 services:
   couchdb0:
+    container_name: couchdb0
     <<: *couchdb-base
     ports:
       - "5984:5984"
 
   couchdb1:
+    container_name: couchdb1
     <<: *couchdb-base
     ports:
       - "6984:5984"
 
   couchdb2:
+    container_name: couchdb2
     <<: *couchdb-base
     ports:
       - "7984:5984"
 
   couchdb3:
+    container_name: couchdb3
     <<: *couchdb-base
     ports:
       - "8984:5984"
@@ -45,6 +49,8 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    depends_on:
+      - couchdb0  
       
   peer1-org1:
     environment:
@@ -52,6 +58,8 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    depends_on:
+      - couchdb1  
       
   peer0-org2:
     environment:
@@ -59,6 +67,8 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb2:5984
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    depends_on:
+      - couchdb2  
       
   peer1-org2:
     environment:
@@ -66,3 +76,5 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb3:5984
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    depends_on:
+      - couchdb3  
