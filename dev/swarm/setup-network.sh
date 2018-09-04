@@ -5,6 +5,7 @@ COMPOSE_FILE_COUCH=docker-compose-couch.yaml
 COMPOSE_FILE_MONITORING=docker-compose-prom.yaml
 COMPOSE_FILE_VISUALIZER=docker-compose-visualizer.yaml
 COMPOSE_FILE_DEPLOY=docker-compose-fabric-deploy.yaml
+COMPOSE_FILE_COMMONS="docker-compose-fabric.yaml -f docker-compose-zookeeper-kafka.yaml"
 
 function printHelp () {
 cat << HELP
@@ -170,11 +171,11 @@ function networkUp () {
     checkNetworkConfigs
 
     if [ ! -z "${REPLENISH_COMPOSE_FILE}" ]; then
-      log purple "==> docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE up -d "
-      docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE up
+      log purple "==> docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE up -d "
+      docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE up
     else
-      log purple "==> docker-compose -f $COMPOSE_FILE up -d "
-      docker-compose -f $COMPOSE_FILE up
+      log purple "==> docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE up -d "
+      docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE up
     fi
 
     #if [ $? -ne 0 ]; then
@@ -192,11 +193,11 @@ function networkDown () {
     log yellow "#################### stop & remove fabric network #################### "
     
     if [ ! -z "${REPLENISH_COMPOSE_FILE}" ]; then
-      log purple "==> docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE down"
-      docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE down
+      log purple "==> docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE down"
+      docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE down
     else
-      log purple "==> docker-compose -f $COMPOSE_FILE down"
-      docker-compose -f $COMPOSE_FILE down
+      log purple "==> docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE down"
+      docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE down
     fi
     echo
     
@@ -226,24 +227,40 @@ function deployStack() {
     fi
 
     if [ ! -z "${REPLENISH_COMPOSE_FILE}" ]; then
-      log purple "==> docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE config > docker-compose.stack.yml"      
-      docker-compose -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE config > docker-compose.stack.yml
-      #docker stack deploy --compose-file $COMPOSE_FILE $REPLENISH_COMPOSE_FILE fabric
+      log purple "==> docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE config > docker-compose.stack.yml"
+      docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE $REPLENISH_COMPOSE_FILE config > docker-compose.stack.yml
+      
+      #COMPOSE_FILE_COMMONS=`echo $COMPOSE_FILE_COMMONS | sed 's/ -f/ -c/g'`
+      #REPLENISH_COMPOSE_FILE=`echo $REPLENISH_COMPOSE_FILE | sed 's/ -f/ -c/g'`
+      #log purple "==> docker stack deploy -c $COMPOSE_FILE_COMMONS -c $COMPOSE_FILE $REPLENISH_COMPOSE_FILE fabric"
+      #docker stack deploy -c $COMPOSE_FILE_COMMONS -c $COMPOSE_FILE $REPLENISH_COMPOSE_FILE fabric
     else
-      log purple "==> docker-compose -f $COMPOSE_FILE config > docker-compose.stack.yml"
-      docker-compose -f $COMPOSE_FILE config > docker-compose.stack.yml
-      #docker stack deploy --compose-file $COMPOSE_FILE fabric
+      log purple "==> docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE config > docker-compose.stack.yml"
+      docker-compose -f $COMPOSE_FILE_COMMONS -f $COMPOSE_FILE config > docker-compose.stack.yml
+
+      #COMPOSE_FILE_COMMONS=`echo $COMPOSE_FILE_COMMONS | sed 's/ -f/ -c/g'`
+      #log purple "==> docker stack deploy -c $COMPOSE_FILE_COMMONS -c $COMPOSE_FILE fabric"
+      #docker stack deploy -c $COMPOSE_FILE_COMMONS -c $COMPOSE_FILE fabric
     fi
 
 
     if [ -f "docker-compose.stack.yml" ]; then
+      log purple "==> docker stack deploy -c docker-compose.stack.yml fabric"
       docker stack deploy -c docker-compose.stack.yml fabric      
+    else
+      log red "==> docker-compose.stack.yml not found!!!"
+      exit 1  
     fi
 
     if [ "${ENABLED_MONITOR}" == "true" ]; then
-        docker service logs monitor   
-    fi       
-    docker service logs fabric
+      log purple "==> monitor stack list"
+      docker stack ps monitor
+    fi    
+    log purple "==> fabric stack fabric list"   
+    docker stack ps fabric
+
+    log purple "==> fabric service list" 
+    docker service ls
 }
 
 
@@ -254,6 +271,11 @@ function removeStack() {
         docker stack rm monitor fabric    
     fi    
     docker stack rm fabric
+
+    if [ -f "docker-compose.stack.yml" ]; then
+      log purple "==> rm -rfv docker-compose.stack.yml"
+      rm -rfv docker-compose.stack.yml     
+    fi
 }
 
 
@@ -302,7 +324,7 @@ while getopts ":f:n:t:cedmhvs" opt; do
             REPLENISH_COMPOSE_FILE="${REPLENISH_COMPOSE_FILE} -f ${COMPOSE_FILE_DEPLOY}"
         ;;
         m ) 
-            ENABLED_MONITOR="true"            
+            ENABLED_MONITOR="true"
         ;;
         h ) 
             printHelp
