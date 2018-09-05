@@ -11,11 +11,11 @@ x-base-services:
       FABRIC_CA_SERVER_TLS_ENABLED: ${HYPERLEDGER_FABRIC_ENABLE_TLS}
     expose:
       - "7054"
-    deploy:
+    deploy: &ca-deploy-common
       #replicas: 3
-      #resources:
-      #  limits:
-      #    cpus: "0.3"
+      resources:
+        limits:
+          cpus: "0.3"
       #    memory: 2000M
       restart_policy:
         condition: on-failure   
@@ -37,6 +37,11 @@ services:
   ca0:
     container_name: ca.foo.com
     <<: *ca-base
+    deploy:
+      <<: *ca-deploy-common
+      placement:
+        constraints:
+          - node.hostname == localhost.localdomain
     environment:
       <<: *ca-env-common
       FABRIC_CA_SERVER_CA_NAME: ca-org1
@@ -56,6 +61,11 @@ services:
   ca1:
     container_name: ca.bar.com
     <<: *ca-base
+    deploy:
+      <<: *ca-deploy-common
+      placement:
+        constraints:
+          - node.hostname == localhost.localdomain
     environment:
       <<: *ca-env-common
       FABRIC_CA_SERVER_CA_NAME: ca-org2
@@ -71,6 +81,43 @@ services:
       blockchain_net:
         aliases:
           - ca.bar.com        
+  
+  configtxlator:
+    container_name: configtxlator.com
+    image: hyperledger/fabric-tools${IMAGE_TAG_FABRIC}    
+    command: /usr/local/bin/configtxlator start
+    ports:
+      - "7059:7059"
+    networks:
+      blockchain_net:
+        aliases:
+          - configtxlator.com
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.2"
+      #    memory: 500M
+      restart_policy:
+        condition: on-failure  
+      placement:
+        constraints: [node.role == worker]
+
+  ccenv:
+    container_name: ccenv
+    image: hyperledger/fabric-ccenv${IMAGE_TAG_FABRIC}
+    networks:
+      - blockchain_net
+    deploy:
+      #replicas: 3
+      resources:
+        limits:
+          cpus: "0.25"
+      #    memory: 2000M
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints: [node.role == worker]
 
   zookeeper0:
     networks:
@@ -128,37 +175,4 @@ services:
     networks:
       blockchain_net:
         aliases:
-          - peer1.org2.bar.com  
-  
-  configtxlator:
-    container_name: configtxlator.com
-    image: hyperledger/fabric-tools${IMAGE_TAG_FABRIC}
-    ports:
-      - "7059:7059"
-    command: /usr/local/bin/configtxlator start
-    networks:
-      blockchain_net:
-        aliases:
-          - configtxlator.com
-    deploy:
-      #replicas: 3
-      #resources:
-      #  limits:
-      #    cpus: "0.1"
-      #    memory: 500M
-      restart_policy:
-        condition: on-failure      
-
-  ccenv:
-    container_name: ccenv
-    image: hyperledger/fabric-ccenv${IMAGE_TAG_FABRIC}
-    networks:
-      - blockchain_net
-    deploy:
-      #replicas: 3
-      #resources:
-      #  limits:
-      #    cpus: "0.25"
-      #    memory: 2000M
-      restart_policy:
-        condition: on-failure  
+          - peer1.org2.bar.com
