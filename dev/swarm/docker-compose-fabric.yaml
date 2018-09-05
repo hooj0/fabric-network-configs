@@ -24,12 +24,14 @@ x-base-services:
     command: orderer
     deploy:
       #replicas: 3
-      #resources:
-      #  limits:
-      #    cpus: "0.3"
-      #    memory: 5000M
+      resources:
+        limits:
+          cpus: "0.5"
+          #memory: 5000M
       restart_policy:
         condition: on-failure
+      placement:
+        constraints: [node.role == manager]  
     depends_on:
       - zookeeper0
       - zookeeper1
@@ -73,11 +75,11 @@ x-base-services:
       CORE_PEER_EVENTS_TIMEWINDOW: 3600s
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
-    deploy:
+    deploy: &peer-deploy-common
       #replicas: 3
-      #resources:
-      #  limits:
-      #    cpus: "0.25"
+      resources:
+        limits:
+          cpus: "0.25"
       #    memory: 2500M
       restart_policy:
         condition: on-failure   
@@ -113,6 +115,11 @@ services:
   peer0-org1:
     container_name: peer0.org1.foo.com
     <<: *peer-base
+    deploy:
+      <<: *peer-deploy-common
+      placement:
+        constraints:
+          - node.hostname == dev-010
     environment:
       <<: *peer-env-common
       CORE_PEER_ID: peer0.org1.foo.com
@@ -127,8 +134,10 @@ services:
       # NEW ADD
       CORE_PEER_CHAINCODEADDRESS: peer0.org1.foo.com:7052
       CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
+      CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org1.foo.com:7051
       
       # v1.2
+      # CORE_PEER_LISTENADDRESS: peer0.org1.foo.com:7051
       CORE_PEER_GOSSIP_ENDPOINT: peer0.org1.foo.com:7051
       CORE_PEER_EVENTS_ADDRESS: 0.0.0.0:7053
     volumes:
@@ -144,12 +153,16 @@ services:
   peer1-org1:
     container_name: peer1.org1.foo.com
     <<: *peer-base
+    deploy:
+      <<: *peer-deploy-common
+      placement:
+        constraints:
+          - node.hostname == dev-020
     environment:
       <<: *peer-env-common
       CORE_PEER_ID: peer1.org1.foo.com
       CORE_PEER_ADDRESS: peer1.org1.foo.com:7051
       CORE_PEER_GOSSIP_EXTERNALENDPOINT: peer1.org1.foo.com:7051
-      #CORE_PEER_GOSSIP_BOOTSTRAP: peer0.org1.foo.com:7051
       CORE_PEER_LOCALMSPID: Org1MSP
 
       #CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/msp/cacerts/ca.org1.foo.com-cert.pem
@@ -161,7 +174,7 @@ services:
       CORE_PEER_GOSSIP_BOOTSTRAP: peer0.org1.foo.com:7051
       
       # v1.2
-      CORE_PEER_LISTENADDRESS: peer1.org1.foo.com:7051
+      #CORE_PEER_LISTENADDRESS: peer1.org1.foo.com:7051
       CORE_PEER_GOSSIP_ENDPOINT: peer1.org1.foo.com:7051
       CORE_PEER_EVENTS_ADDRESS: 0.0.0.0:7053
     volumes:
@@ -178,6 +191,11 @@ services:
   peer0-org2:
     container_name: peer0.org2.bar.com    
     <<: *peer-base
+    deploy:
+      <<: *peer-deploy-common
+      placement:
+        constraints:
+          - node.hostname == localhost.localdomain
     environment:
       <<: *peer-env-common
       CORE_PEER_ID: peer0.org2.bar.com
@@ -191,12 +209,12 @@ services:
       # NEW ADD
       CORE_PEER_CHAINCODEADDRESS: peer0.org2.bar.com:7052
       CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
+      CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org2.bar.com:7051
       
       # v1.2
-      CORE_PEER_LISTENADDRESS: peer0.org2.bar.com:7051
+      #CORE_PEER_LISTENADDRESS: peer0.org2.bar.com:7051
       CORE_PEER_GOSSIP_ENDPOINT: peer0.org2.bar.com:7051
       CORE_PEER_EVENTS_ADDRESS: 0.0.0.0:7053
-      CORE_PEER_GOSSIP_BOOTSTRAP: peer0.org2.bar.com:7051
     volumes:
       - /var/run/:/host/var/run/
       - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.bar.com/peers/peer0.org2.bar.com/:/etc/hyperledger/msp/peer:ro
@@ -210,12 +228,16 @@ services:
   peer1-org2:
     container_name: peer1.org2.bar.com
     <<: *peer-base
+    deploy:
+      <<: *peer-deploy-common
+      placement:
+        constraints:
+          - node.hostname == dev-040
     environment:
       <<: *peer-env-common
       CORE_PEER_ID: peer1.org2.bar.com
       CORE_PEER_ADDRESS: peer1.org2.bar.com:7051
       CORE_PEER_GOSSIP_EXTERNALENDPOINT: peer1.org2.bar.com:7051
-      #CORE_PEER_GOSSIP_BOOTSTRAP: peer0.org2.bar.com:7051
       CORE_PEER_LOCALMSPID: Org2MSP
       #CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/msp/cacerts/ca.org2.bar.com-cert.pem
       CORE_PEER_TLS_CLIENTROOTCAS_FILES: /etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org2.bar.com-cert.pem
@@ -223,11 +245,11 @@ services:
       # NEW ADD
       CORE_PEER_CHAINCODEADDRESS: peer1.org2.bar.com:7052
       CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
-      CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org2.bar.com:7051
+      CORE_PEER_GOSSIP_BOOTSTRAP: peer0.org2.bar.com:7051
       
       # v1.2
-      CORE_PEER_LISTENADDRESS: peer1.org2.bar.com:7051
-      CORE_PEER_GOSSIP_ENDPOINT: peer0.org1.bar.com:7051
+      #CORE_PEER_LISTENADDRESS: peer1.org2.bar.com:7051
+      CORE_PEER_GOSSIP_ENDPOINT: peer1.org2.bar.com:7051
       CORE_PEER_EVENTS_ADDRESS: 0.0.0.0:7053
     volumes:
       - /var/run/:/host/var/run/
