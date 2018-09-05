@@ -25,10 +25,10 @@ x-base-services:
         mode: host        
     deploy: &zookeeper-deploy-common
       #replicas: 3
-      #resources:
-      #  limits:
-      #    cpus: "0.25"
-      #    memory: 3000M
+      resources:
+        limits:
+          cpus: "0.25"
+          #memory: 3000M
       restart_policy:
         condition: on-failure
 
@@ -43,12 +43,12 @@ x-base-services:
       KAFKA_ZOOKEEPER_CONNECT: "${dev_010}:2181,${dev_020}:2181,${dev_040}:2181"
     ports:
       - 9092    
-    deploy:
+    deploy: &kafka-deploy-common
       #replicas: 3
-      #resources:
-      #  limits:
-      #    cpus: "0.25"
-      #    memory: 3000M
+      resources:
+        limits:
+          cpus: "0.25"
+          #memory: 3000M
       restart_policy:
         condition: on-failure
     depends_on:
@@ -105,6 +105,11 @@ services:
   kafka0:
     container_name: kafka0
     <<: *kafka-base
+    deploy:
+      <<: *kafka-deploy-common
+      placement:
+        constraints:
+          - node.hostname == dev-010
     environment:
       <<: *kafka-env-common
       KAFKA_BROKER_ID: 0
@@ -112,6 +117,11 @@ services:
   kafka1:
     container_name: kafka1
     <<: *kafka-base
+    deploy:
+      <<: *kafka-deploy-common
+      placement:
+        constraints:
+          - node.hostname == dev-020
     environment:
       <<: *kafka-env-common
       KAFKA_BROKER_ID: 1
@@ -120,6 +130,11 @@ services:
   kafka2:
     container_name: kafka2
     <<: *kafka-base
+    deploy:
+      <<: *kafka-deploy-common
+      placement:
+        constraints:
+          - node.hostname == localhost.localdomain
     environment:
       <<: *kafka-env-common
       KAFKA_BROKER_ID: 2
@@ -128,6 +143,11 @@ services:
   kafka3:
     container_name: kafka3
     <<: *kafka-base
+    deploy:
+      <<: *kafka-deploy-common
+      placement:
+        constraints:
+          - node.hostname == dev-040
     environment:
       <<: *kafka-env-common
       KAFKA_BROKER_ID: 3
