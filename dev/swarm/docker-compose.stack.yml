@@ -6,7 +6,7 @@ services:
   ca0:
     command: sh -c "fabric-ca-server start --cfg.identities.allowremove --cfg.affiliations.allowremove
       --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem
-      --ca.keyfile /etc/hyperledger/fabric-ca-server-config/a130e21ff7e0b9e120a671c1956538d16128657ba16608c2d03d2911e71a63a7_sk
+      --ca.keyfile /etc/hyperledger/fabric-ca-server-config/f4792e6030a4369f52d1506a90ee3b3dd4f7724953a45d97322eeb270037504f_sk
       -b admin:adminpw -d"
     container_name: ca.foo.com
     deploy:
@@ -17,9 +17,8 @@ services:
       FABRIC_CA_SERVER_CA_NAME: ca-org1
       FABRIC_CA_SERVER_TLS_CERTFILE: /etc/hyperledger/fabric-ca-server-config/ca.org1.foo.com-cert.pem
       FABRIC_CA_SERVER_TLS_ENABLED: "false"
-      FABRIC_CA_SERVER_TLS_KEYFILE: /etc/hyperledger/fabric-ca-server-config/a130e21ff7e0b9e120a671c1956538d16128657ba16608c2d03d2911e71a63a7_sk
-    expose:
-    - '7054'
+      FABRIC_CA_SERVER_TLS_KEYFILE: /etc/hyperledger/fabric-ca-server-config/f4792e6030a4369f52d1506a90ee3b3dd4f7724953a45d97322eeb270037504f_sk
+    hostname: ca.foo.com
     image: hyperledger/fabric-ca:x86_64-1.1.0
     networks:
       blockchain_net:
@@ -33,7 +32,7 @@ services:
   ca1:
     command: sh -c "fabric-ca-server start --registry.maxenrollments -1 --ca.certfile
       /etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem --ca.keyfile
-      /etc/hyperledger/fabric-ca-server-config/4c6d79e99a006464b63f9d0cfabef643206a38138344a4ee804c06f99282e246_sk
+      /etc/hyperledger/fabric-ca-server-config/771675bea5cfd592c07d5e17acf94be19459a0f76504c541d99adf5df30c2127_sk
       -b admin:adminpw -d"
     container_name: ca.bar.com
     deploy:
@@ -44,9 +43,8 @@ services:
       FABRIC_CA_SERVER_CA_NAME: ca-org2
       FABRIC_CA_SERVER_TLS_CERTFILE: /etc/hyperledger/fabric-ca-server-config/ca.org2.bar.com-cert.pem
       FABRIC_CA_SERVER_TLS_ENABLED: "false"
-      FABRIC_CA_SERVER_TLS_KEYFILE: /etc/hyperledger/fabric-ca-server-config/4c6d79e99a006464b63f9d0cfabef643206a38138344a4ee804c06f99282e246_sk
-    expose:
-    - '7054'
+      FABRIC_CA_SERVER_TLS_KEYFILE: /etc/hyperledger/fabric-ca-server-config/771675bea5cfd592c07d5e17acf94be19459a0f76504c541d99adf5df30c2127_sk
+    hostname: ca.bar.com
     image: hyperledger/fabric-ca:x86_64-1.1.0
     networks:
       blockchain_net:
@@ -60,6 +58,7 @@ services:
   ccenv:
     container_name: ccenv
     deploy:
+      replicas: 2
       restart_policy:
         condition: on-failure
     image: hyperledger/fabric-ccenv:x86_64-1.1.0
@@ -69,8 +68,10 @@ services:
     command: /usr/local/bin/configtxlator start
     container_name: configtxlator.com
     deploy:
+      replicas: 2
       restart_policy:
         condition: on-failure
+    hostname: configtxlator.com
     image: hyperledger/fabric-tools:x86_64-1.1.0
     networks:
       blockchain_net:
@@ -79,93 +80,6 @@ services:
     ports:
     - published: 7059
       target: 7059
-  couchdb0:
-    container_name: couchdb0
-    deploy:
-      placement:
-        constraints:
-        - node.hostname == dev-010
-      resources:
-        limits:
-          cpus: '0.25'
-      restart_policy:
-        condition: on-failure
-    environment:
-      COUCHDB_PASSWORD: ''
-      COUCHDB_USER: ''
-    expose:
-    - '5984'
-    image: hyperledger/fabric-couchdb:x86_64-0.4.6
-    networks:
-      blockchain_net:
-        aliases:
-        - couchdb0
-    ports:
-    - published: 5984
-      target: 5984
-  couchdb1:
-    container_name: couchdb1
-    deploy:
-      placement:
-        constraints:
-        - node.hostname == dev-020
-      resources:
-        limits:
-          cpus: '0.25'
-      restart_policy:
-        condition: on-failure
-    environment:
-      COUCHDB_PASSWORD: ''
-      COUCHDB_USER: ''
-    expose:
-    - '5984'
-    image: hyperledger/fabric-couchdb:x86_64-0.4.6
-    networks:
-      blockchain_net:
-        aliases:
-        - couchdb1
-  couchdb2:
-    container_name: couchdb2
-    deploy:
-      placement:
-        constraints:
-        - node.hostname == localhost.localdomain
-      resources:
-        limits:
-          cpus: '0.25'
-      restart_policy:
-        condition: on-failure
-    environment:
-      COUCHDB_PASSWORD: ''
-      COUCHDB_USER: ''
-    expose:
-    - '5984'
-    image: hyperledger/fabric-couchdb:x86_64-0.4.6
-    networks:
-      blockchain_net:
-        aliases:
-        - couchdb2
-  couchdb3:
-    container_name: couchdb3
-    deploy:
-      placement:
-        constraints:
-        - node.hostname == dev-040
-      resources:
-        limits:
-          cpus: '0.25'
-      restart_policy:
-        condition: on-failure
-    environment:
-      COUCHDB_PASSWORD: ''
-      COUCHDB_USER: ''
-    expose:
-    - '5984'
-    image: hyperledger/fabric-couchdb:x86_64-0.4.6
-    networks:
-      blockchain_net:
-        aliases:
-        - couchdb3
   kafka0:
     container_name: kafka0
     depends_on:
@@ -175,10 +89,7 @@ services:
     deploy:
       placement:
         constraints:
-        - node.hostname == dev-010
-      resources:
-        limits:
-          cpus: '0.25'
+        - node.role == manager
       restart_policy:
         condition: on-failure
     environment:
@@ -188,12 +99,17 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 2
       KAFKA_REPLICA_FETCH_MAX_BYTES: 103809024
       KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
-      KAFKA_ZOOKEEPER_CONNECT: 192.168.33.71:2181,192.168.33.72:2181,192.168.33.74:2181
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
+      KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 10000
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 10000
+    expose:
+    - '9092'
+    hostname: kafka0.simple.com
     image: hyperledger/fabric-kafka:x86_64-0.4.6
     networks:
-      blockchain_net: null
-    ports:
-    - target: 9092
+      blockchain_net:
+        aliases:
+        - kafka0.simple.com
   kafka1:
     container_name: kafka1
     depends_on:
@@ -203,10 +119,7 @@ services:
     deploy:
       placement:
         constraints:
-        - node.hostname == dev-020
-      resources:
-        limits:
-          cpus: '0.25'
+        - node.role == manager
       restart_policy:
         condition: on-failure
     environment:
@@ -216,12 +129,17 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 2
       KAFKA_REPLICA_FETCH_MAX_BYTES: 103809024
       KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
-      KAFKA_ZOOKEEPER_CONNECT: 192.168.33.71:2181,192.168.33.72:2181,192.168.33.74:2181
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
+      KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 10000
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 10000
+    expose:
+    - '9092'
+    hostname: kafka1.simple.com
     image: hyperledger/fabric-kafka:x86_64-0.4.6
     networks:
-      blockchain_net: null
-    ports:
-    - target: 9092
+      blockchain_net:
+        aliases:
+        - kafka1.simple.com
   kafka2:
     container_name: kafka2
     depends_on:
@@ -231,10 +149,7 @@ services:
     deploy:
       placement:
         constraints:
-        - node.hostname == localhost.localdomain
-      resources:
-        limits:
-          cpus: '0.25'
+        - node.role == manager
       restart_policy:
         condition: on-failure
     environment:
@@ -244,12 +159,17 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 2
       KAFKA_REPLICA_FETCH_MAX_BYTES: 103809024
       KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
-      KAFKA_ZOOKEEPER_CONNECT: 192.168.33.71:2181,192.168.33.72:2181,192.168.33.74:2181
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
+      KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 10000
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 10000
+    expose:
+    - '9092'
+    hostname: kafka2.simple.com
     image: hyperledger/fabric-kafka:x86_64-0.4.6
     networks:
-      blockchain_net: null
-    ports:
-    - target: 9092
+      blockchain_net:
+        aliases:
+        - kafka2.simple.com
   kafka3:
     container_name: kafka3
     depends_on:
@@ -259,10 +179,7 @@ services:
     deploy:
       placement:
         constraints:
-        - node.hostname == dev-040
-      resources:
-        limits:
-          cpus: '0.25'
+        - node.role == manager
       restart_policy:
         condition: on-failure
     environment:
@@ -272,12 +189,17 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 2
       KAFKA_REPLICA_FETCH_MAX_BYTES: 103809024
       KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
-      KAFKA_ZOOKEEPER_CONNECT: 192.168.33.71:2181,192.168.33.72:2181,192.168.33.74:2181
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
+      KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 10000
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 10000
+    expose:
+    - '9092'
+    hostname: kafka3.simple.com
     image: hyperledger/fabric-kafka:x86_64-0.4.6
     networks:
-      blockchain_net: null
-    ports:
-    - target: 9092
+      blockchain_net:
+        aliases:
+        - kafka3.simple.com
   orderer:
     command: orderer
     container_name: orderer.simple.com
@@ -293,9 +215,6 @@ services:
       placement:
         constraints:
         - node.role == manager
-      resources:
-        limits:
-          cpus: '0.5'
       restart_policy:
         condition: on-failure
     environment:
@@ -316,8 +235,9 @@ services:
       ORDERER_GENERAL_TLS_PRIVATEKEY: /etc/hyperledger/msp/orderer/tls/server.key
       ORDERER_GENERAL_TLS_ROOTCAS: '[/etc/hyperledger/msp/orderer/tls/ca.crt]'
       ORDERER_KAFKA_RETRY_SHORTINTERVAL: 1s
-      ORDERER_KAFKA_RETRY_SHORTTOTAL: 30s
+      ORDERER_KAFKA_RETRY_SHORTTOTAL: 60s
       ORDERER_KAFKA_VERBOSE: "true"
+    hostname: orderer.simple.com
     image: hyperledger/fabric-orderer:x86_64-1.1.0
     networks:
       blockchain_net:
@@ -332,26 +252,15 @@ services:
     - /opt/gopath/src/github.com/hyperledger/fabric/network_resources/dev/swarm/fabric-configs/v1.1/crypto-config/peerOrganizations/org1.foo.com/peers/peer0.org1.foo.com:/etc/hyperledger/msp/peerOrg1:ro
     - /opt/gopath/src/github.com/hyperledger/fabric/network_resources/dev/swarm/fabric-configs/v1.1/crypto-config/peerOrganizations/org2.bar.com/peers/peer0.org2.bar.com:/etc/hyperledger/msp/peerOrg2:ro
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
-  peer0-org1:
+  peer0_org1:
     command: peer node start
     container_name: peer0.org1.foo.com
     depends_on:
-    - couchdb0
     - orderer
     deploy:
-      placement:
-        constraints:
-        - node.hostname == dev-010
-      resources:
-        limits:
-          cpus: '0.25'
       restart_policy:
         condition: on-failure
     environment:
-      CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS: couchdb0:5984
-      CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD: ''
-      CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME: ''
-      CORE_LEDGER_STATE_STATEDATABASE: CouchDB
       CORE_LOGGING_LEVEL: DEBUG
       CORE_PEER_ADDRESS: peer0.org1.foo.com:7051
       CORE_PEER_AUTHENTICATION_TIMEWINDOW: 3600s
@@ -379,6 +288,7 @@ services:
       CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/tls/ca.crt
       CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE: fabric_blockchain_net
       CORE_VM_ENDPOINT: unix:///host/var/run/docker.sock
+    hostname: peer0.org1.foo.com
     image: hyperledger/fabric-peer:x86_64-1.1.0
     networks:
       blockchain_net:
@@ -395,26 +305,15 @@ services:
     - /opt/gopath/src/github.com/hyperledger/fabric/network_resources/dev/swarm/fabric-configs/v1.1/crypto-config/peerOrganizations/org1.foo.com/peers/peer0.org1.foo.com:/etc/hyperledger/msp/peer:ro
     - /var/run:/host/var/run:rw
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-  peer0-org2:
+  peer0_org2:
     command: peer node start
     container_name: peer0.org2.bar.com
     depends_on:
-    - couchdb2
     - orderer
     deploy:
-      placement:
-        constraints:
-        - node.hostname == localhost.localdomain
-      resources:
-        limits:
-          cpus: '0.25'
       restart_policy:
         condition: on-failure
     environment:
-      CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS: couchdb2:5984
-      CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD: ''
-      CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME: ''
-      CORE_LEDGER_STATE_STATEDATABASE: CouchDB
       CORE_LOGGING_LEVEL: DEBUG
       CORE_PEER_ADDRESS: peer0.org2.bar.com:7051
       CORE_PEER_AUTHENTICATION_TIMEWINDOW: 3600s
@@ -442,6 +341,7 @@ services:
       CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/tls/ca.crt
       CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE: fabric_blockchain_net
       CORE_VM_ENDPOINT: unix:///host/var/run/docker.sock
+    hostname: peer0.org2.bar.com
     image: hyperledger/fabric-peer:x86_64-1.1.0
     networks:
       blockchain_net:
@@ -458,27 +358,16 @@ services:
     - /opt/gopath/src/github.com/hyperledger/fabric/network_resources/dev/swarm/fabric-configs/v1.1/crypto-config/peerOrganizations/org2.bar.com/peers/peer0.org2.bar.com:/etc/hyperledger/msp/peer:ro
     - /var/run:/host/var/run:rw
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-  peer1-org1:
+  peer1_org1:
     command: peer node start
     container_name: peer1.org1.foo.com
     depends_on:
-    - couchdb1
     - orderer
-    - peer0-org1
+    - peer0_org1
     deploy:
-      placement:
-        constraints:
-        - node.hostname == dev-020
-      resources:
-        limits:
-          cpus: '0.25'
       restart_policy:
         condition: on-failure
     environment:
-      CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS: couchdb1:5984
-      CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD: ''
-      CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME: ''
-      CORE_LEDGER_STATE_STATEDATABASE: CouchDB
       CORE_LOGGING_LEVEL: DEBUG
       CORE_PEER_ADDRESS: peer1.org1.foo.com:7051
       CORE_PEER_AUTHENTICATION_TIMEWINDOW: 3600s
@@ -506,6 +395,7 @@ services:
       CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/tls/ca.crt
       CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE: fabric_blockchain_net
       CORE_VM_ENDPOINT: unix:///host/var/run/docker.sock
+    hostname: peer1.org1.foo.com
     image: hyperledger/fabric-peer:x86_64-1.1.0
     networks:
       blockchain_net:
@@ -522,27 +412,16 @@ services:
     - /opt/gopath/src/github.com/hyperledger/fabric/network_resources/dev/swarm/fabric-configs/v1.1/crypto-config/peerOrganizations/org1.foo.com/peers/peer1.org1.foo.com:/etc/hyperledger/msp/peer:ro
     - /var/run:/host/var/run:rw
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-  peer1-org2:
+  peer1_org2:
     command: peer node start
     container_name: peer1.org2.bar.com
     depends_on:
-    - couchdb3
     - orderer
-    - peer0-org2
+    - peer0_org2
     deploy:
-      placement:
-        constraints:
-        - node.hostname == dev-040
-      resources:
-        limits:
-          cpus: '0.25'
       restart_policy:
         condition: on-failure
     environment:
-      CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS: couchdb3:5984
-      CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD: ''
-      CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME: ''
-      CORE_LEDGER_STATE_STATEDATABASE: CouchDB
       CORE_LOGGING_LEVEL: DEBUG
       CORE_PEER_ADDRESS: peer1.org2.bar.com:7051
       CORE_PEER_AUTHENTICATION_TIMEWINDOW: 3600s
@@ -570,6 +449,7 @@ services:
       CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/tls/ca.crt
       CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE: fabric_blockchain_net
       CORE_VM_ENDPOINT: unix:///host/var/run/docker.sock
+    hostname: peer1.org2.bar.com
     image: hyperledger/fabric-peer:x86_64-1.1.0
     networks:
       blockchain_net:
@@ -586,96 +466,91 @@ services:
     - /opt/gopath/src/github.com/hyperledger/fabric/network_resources/dev/swarm/fabric-configs/v1.1/crypto-config/peerOrganizations/org2.bar.com/peers/peer1.org2.bar.com:/etc/hyperledger/msp/peer:ro
     - /var/run:/host/var/run:rw
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+  visualizer:
+    deploy:
+      placement:
+        constraints:
+        - node.role == manager
+      resources:
+        limits:
+          cpus: '0.15'
+        reservations:
+          cpus: '0.1'
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    image: dockersamples/visualizer
+    networks:
+      blockchain_net: null
+    ports:
+    - published: 3100
+      target: 8080
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:rw
   zookeeper0:
     container_name: zookeeper0
     deploy:
       placement:
         constraints:
-        - node.hostname == dev-010
-      resources:
-        limits:
-          cpus: '0.25'
+        - node.role == manager
       restart_policy:
         condition: on-failure
     environment:
       ZOO_MY_ID: 1
-      ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=192.168.33.72:2888:3888 server.3=192.168.33.74:2888:3888
+      ZOO_SERVERS: server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888
+    expose:
+    - '2181'
+    - '2888'
+    - '3888'
+    hostname: zookeeper0.simple.com
     image: hyperledger/fabric-zookeeper:x86_64-0.4.6
     networks:
-      blockchain_net: null
-    ports:
-    - mode: host
-      protocol: tcp
-      published: 2181
-      target: 2181
-    - mode: host
-      protocol: tcp
-      published: 2888
-      target: 2888
-    - mode: host
-      protocol: tcp
-      published: 3888
-      target: 3888
+      blockchain_net:
+        aliases:
+        - zookeeper0.simple.com
   zookeeper1:
     container_name: zookeeper1
     deploy:
       placement:
         constraints:
-        - node.hostname == dev-020
-      resources:
-        limits:
-          cpus: '0.25'
+        - node.role == manager
       restart_policy:
         condition: on-failure
     environment:
       ZOO_MY_ID: 2
-      ZOO_SERVERS: server.1=192.168.33.71:2888:3888 server.2=0.0.0.0:2888:3888 server.3=192.168.33.74:2888:3888
+      ZOO_SERVERS: server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888
+    expose:
+    - '2181'
+    - '2888'
+    - '3888'
+    hostname: zookeeper1.simple.com
     image: hyperledger/fabric-zookeeper:x86_64-0.4.6
     networks:
-      blockchain_net: null
-    ports:
-    - mode: host
-      protocol: tcp
-      published: 2181
-      target: 2181
-    - mode: host
-      protocol: tcp
-      published: 2888
-      target: 2888
-    - mode: host
-      protocol: tcp
-      published: 3888
-      target: 3888
+      blockchain_net:
+        aliases:
+        - zookeeper1.simple.com
   zookeeper2:
     container_name: zookeeper2
     deploy:
       placement:
         constraints:
-        - node.hostname == dev-040
-      resources:
-        limits:
-          cpus: '0.25'
+        - node.role == manager
       restart_policy:
         condition: on-failure
     environment:
       ZOO_MY_ID: 3
-      ZOO_SERVERS: server.1=192.168.33.71:2888:3888 server.2=192.168.33.72:2888:3888
-        server.3=0.0.0.0:2888:3888
+      ZOO_SERVERS: server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888
+    expose:
+    - '2181'
+    - '2888'
+    - '3888'
+    hostname: zookeeper2.simple.com
     image: hyperledger/fabric-zookeeper:x86_64-0.4.6
     networks:
-      blockchain_net: null
-    ports:
-    - mode: host
-      protocol: tcp
-      published: 2181
-      target: 2181
-    - mode: host
-      protocol: tcp
-      published: 2888
-      target: 2888
-    - mode: host
-      protocol: tcp
-      published: 3888
-      target: 3888
+      blockchain_net:
+        aliases:
+        - zookeeper2.simple.com
 version: '3.6'
 
