@@ -179,10 +179,10 @@ Orderer: &OrdererDefaults
         # this list to identify the brokers of the ordering service.
         # NOTE: Use IP:port notation.
         Brokers:
-          - tasks.kafka0:9092
-          - tasks.kafka1:9092
-          - tasks.kafka2:9092
-          - tasks.kafka3:9092
+          - "kafka0:9092"
+          - "kafka1:9092"
+          - "kafka2:9092"
+          - "kafka3:9092"
 
     # Organizations lists the orgs participating on the orderer side of the
     # network.
