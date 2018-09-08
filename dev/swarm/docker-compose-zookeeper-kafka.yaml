@@ -6,31 +6,25 @@ version: '3.6'
 x-base-services:
   zookeeper: &zookeeper-base
     image: hyperledger/fabric-zookeeper${IMAGE_TAG_FABRIC_ZOOKEEPER}
-    ports: &alone-mode
+    environment: &zookeeper-env-common
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888
+    expose:
       - 2181
       - 2888
       - 3888
-    ports: &swarm-mode
-      - target: 2181
-        published: 2181
-        protocol: tcp
-        mode: host
-      - target: 2888
-        published: 2888
-        protocol: tcp
-        mode: host
-      - target: 3888
-        published: 3888
-        protocol: tcp
-        mode: host        
     deploy: &zookeeper-deploy-common
-      #replicas: 3
-      resources:
-        limits:
-          cpus: "0.25"
+      #mode: global
+      mode: replicated
+      replicas: 4
+      #resources:
+        #limits:
+          #cpus: "0.25"
           #memory: 3000M
       restart_policy:
         condition: on-failure
+      #placement:
+      #  constraints: [node.role == manager]
 
   kafka: &kafka-base
     image: hyperledger/fabric-kafka${IMAGE_TAG_FABRIC_KAFKA}
@@ -40,17 +34,25 @@ x-base-services:
       KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
       KAFKA_MIN_INSYNC_REPLICAS: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
-      KAFKA_ZOOKEEPER_CONNECT: "${dev_010}:2181,${dev_020}:2181,${dev_040}:2181"
-    ports:
+      #zookeeper.connection.timeout.ms
+      KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 10000
+      #zookeeper.session.timeout.ms
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 10000
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
+    expose:
       - 9092    
     deploy: &kafka-deploy-common
-      #replicas: 3
-      resources:
-        limits:
-          cpus: "0.25"
+      #mode: global
+      mode: replicated
+      replicas: 4
+      #resources:
+        #limits:
+          #cpus: "0.25"
           #memory: 3000M
       restart_policy:
         condition: on-failure
+      #placement:
+      #  constraints: [node.role == manager]
     depends_on:
       - zookeeper0
       - zookeeper1
@@ -63,53 +65,27 @@ services:
   zookeeper0:
     container_name: zookeeper0
     <<: *zookeeper-base
-    deploy:
-      <<: *zookeeper-deploy-common
-      placement:
-        constraints:
-          - node.hostname == dev-010
-    #ports: *alone-mode  
     environment:
+      <<: *zookeeper-env-common
       ZOO_MY_ID: 1
-      ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=${dev_020}:2888:3888 server.3=${dev_040}:2888:3888
-      #ZOO_SERVERS: server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888    
 
   zookeeper1:
     container_name: zookeeper1
     <<: *zookeeper-base
-    deploy:
-      <<: *zookeeper-deploy-common
-      placement:
-        constraints:
-          - node.hostname == dev-020
-    #ports: *alone-mode
     environment:
+      <<: *zookeeper-env-common
       ZOO_MY_ID: 2
-      ZOO_SERVERS: server.1=${dev_010}:2888:3888 server.2=0.0.0.0:2888:3888 server.3=${dev_040}:2888:3888
-      #ZOO_SERVERS: server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888
 
   zookeeper2:
     container_name: zookeeper2
     <<: *zookeeper-base
-    deploy:
-      <<: *zookeeper-deploy-common    
-      placement:
-        constraints:
-          - node.hostname == dev-040
-    #ports: *alone-mode
     environment:
+      <<: *zookeeper-env-common
       ZOO_MY_ID: 3  
-      ZOO_SERVERS: server.1=${dev_010}:2888:3888 server.2=${dev_020}:2888:3888 server.3=0.0.0.0:2888:3888
-      #ZOO_SERVERS: server.1=zookeeper0:2888:3888 server.2=zookeeper1:2888:3888 server.3=zookeeper2:2888:3888
 
   kafka0:
     container_name: kafka0
     <<: *kafka-base
-    deploy:
-      <<: *kafka-deploy-common
-      placement:
-        constraints:
-          - node.hostname == dev-010
     environment:
       <<: *kafka-env-common
       KAFKA_BROKER_ID: 0
@@ -117,11 +93,6 @@ services:
   kafka1:
     container_name: kafka1
     <<: *kafka-base
-    deploy:
-      <<: *kafka-deploy-common
-      placement:
-        constraints:
-          - node.hostname == dev-020
     environment:
       <<: *kafka-env-common
       KAFKA_BROKER_ID: 1
@@ -130,11 +101,6 @@ services:
   kafka2:
     container_name: kafka2
     <<: *kafka-base
-    deploy:
-      <<: *kafka-deploy-common
-      placement:
-        constraints:
-          - node.hostname == localhost.localdomain
     environment:
       <<: *kafka-env-common
       KAFKA_BROKER_ID: 2
@@ -143,11 +109,6 @@ services:
   kafka3:
     container_name: kafka3
     <<: *kafka-base
-    deploy:
-      <<: *kafka-deploy-common
-      placement:
-        constraints:
-          - node.hostname == dev-040
     environment:
       <<: *kafka-env-common
       KAFKA_BROKER_ID: 3
