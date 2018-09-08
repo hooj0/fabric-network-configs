@@ -1,9 +1,11 @@
 version: '3.6'
-   
+
+#-----------------------------------------------------------------------------------
+# visualizer service yaml
+#-----------------------------------------------------------------------------------
 services:
   visualizer:
-    image: registry.cn-hangzhou.aliyuncs.com/qingcheng/visualizer:stable
-    #image: visualizer:stable
+    image: dockersamples/visualizer
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"    
     networks:
@@ -20,7 +22,7 @@ services:
         window: 120s
       resources:  
         limits:
-          cpus: '0.25'
+          cpus: '0.15'
           #memory: 1000M
         reservations:
           cpus: '0.1'
