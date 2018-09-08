@@ -9,14 +9,14 @@ x-base-services:
     environment: &ca-env-common
       FABRIC_CA_HOME: /etc/hyperledger/fabric-ca-server
       FABRIC_CA_SERVER_TLS_ENABLED: ${HYPERLEDGER_FABRIC_ENABLE_TLS}
-    expose:
-      - "7054"
     deploy: &ca-deploy-common
-      #replicas: 3
-      resources:
-        limits:
-          cpus: "0.3"
-      #    memory: 2000M
+      #mode: global
+      mode: replicated
+      replicas: 4
+      #resources:
+        #limits:
+          #cpus: "0.2"
+          #memory: 2000M
       restart_policy:
         condition: on-failure   
 
@@ -36,12 +36,8 @@ networks:
 services:
   ca0:
     container_name: ca.foo.com
+    hostname: ca.foo.com
     <<: *ca-base
-    deploy:
-      <<: *ca-deploy-common
-      placement:
-        constraints:
-          - node.hostname == localhost.localdomain
     environment:
       <<: *ca-env-common
       FABRIC_CA_SERVER_CA_NAME: ca-org1
@@ -60,12 +56,8 @@ services:
 
   ca1:
     container_name: ca.bar.com
+    hostname: ca.bar.com
     <<: *ca-base
-    deploy:
-      <<: *ca-deploy-common
-      placement:
-        constraints:
-          - node.hostname == localhost.localdomain
     environment:
       <<: *ca-env-common
       FABRIC_CA_SERVER_CA_NAME: ca-org2
@@ -81,9 +73,13 @@ services:
       blockchain_net:
         aliases:
           - ca.bar.com        
-  
+
+#-----------------------------------------------------------------------------------
+# tools service yaml
+#-----------------------------------------------------------------------------------  
   configtxlator:
     container_name: configtxlator.com
+    hostname: configtxlator.com
     image: hyperledger/fabric-tools${IMAGE_TAG_FABRIC}    
     command: /usr/local/bin/configtxlator start
     ports:
@@ -93,15 +89,13 @@ services:
         aliases:
           - configtxlator.com
     deploy:
-      #replicas: 3
-      resources:
-        limits:
-          cpus: "0.2"
-      #    memory: 500M
+      replicas: 2
+      #resources:
+        #limits:
+          #cpus: "0.1"
+          #memory: 500M
       restart_policy:
         condition: on-failure  
-      placement:
-        constraints: [node.role == worker]
 
   ccenv:
     container_name: ccenv
@@ -109,69 +103,105 @@ services:
     networks:
       - blockchain_net
     deploy:
-      #replicas: 3
-      resources:
-        limits:
-          cpus: "0.25"
-      #    memory: 2000M
+      replicas: 2
+      #resources:
+        #limits:
+          #cpus: "0.1"
+          #memory: 2000M
       restart_policy:
         condition: on-failure
-      placement:
-        constraints: [node.role == worker]
 
+
+#-----------------------------------------------------------------------------------
+# zookeeper service yaml
+#-----------------------------------------------------------------------------------
   zookeeper0:
+    hostname: zookeeper0.simple.com
     networks:
-      - blockchain_net    
+      blockchain_net:
+        aliases:
+          - zookeeper0.simple.com
 
   zookeeper1:
+    hostname: zookeeper1.simple.com
     networks:
-      - blockchain_net
+      blockchain_net:
+        aliases:
+          - zookeeper1.simple.com
 
   zookeeper2:
+    hostname: zookeeper2.simple.com
     networks:
-      - blockchain_net
+      blockchain_net:
+        aliases:
+          - zookeeper2.simple.com
 
+
+#-----------------------------------------------------------------------------------
+# kafka service yaml
+#-----------------------------------------------------------------------------------
   kafka0:
+    hostname: kafka0.simple.com
     networks:
-      - blockchain_net 
+      blockchain_net:
+        aliases:
+          - kafka0.simple.com
 
   kafka1:
+    hostname: kafka1.simple.com
     networks:
-      - blockchain_net
+      blockchain_net:
+        aliases:
+          - kafka1.simple.com
  
   kafka2:
+    hostname: kafka2.simple.com
     networks:
-      - blockchain_net
+      blockchain_net:
+        aliases:
+          - kafka2.simple.com
 
   kafka3:
+    hostname: kafka3.simple.com
     networks:
-      - blockchain_net
+      blockchain_net:
+        aliases:
+          - kafka3.simple.com
 
-  orderer:    
+
+#-----------------------------------------------------------------------------------
+# orderer & peer service yaml
+#-----------------------------------------------------------------------------------
+  orderer:
+    hostname: orderer.simple.com
     networks:
       blockchain_net:
         aliases:
           - orderer.simple.com
 
-  peer0-org1:    
+  peer0_org1:
+    hostname: peer0.org1.foo.com 
     networks:
       blockchain_net:
         aliases:
-          - peer0.org1.foo.com   
+          - peer0.org1.foo.com
 
-  peer1-org1:    
+  peer1_org1:
+    hostname: peer1.org1.foo.com 
     networks:
       blockchain_net:
         aliases:
           - peer1.org1.foo.com  
 
-  peer0-org2:    
+  peer0_org2:
+    hostname: peer0.org2.bar.com 
     networks:
       blockchain_net:
         aliases:
           - peer0.org2.bar.com  
 
-  peer1-org2:    
+  peer1_org2:
+    hostname: peer1.org2.bar.com 
     networks:
       blockchain_net:
         aliases:
