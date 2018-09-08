@@ -138,9 +138,9 @@ function cleanNetwork() {
         docker rm $(docker ps -aq)
     fi
 
-    lines=`docker network ls -f 'name=basic_default' | wc -l`
+    lines=`docker network ls -f 'name=fabric_blockchain_net' | wc -l`
     if ((lines > 1)); then
-        docker network rm basic_default
+        docker network rm fabric_blockchain_net
     fi
     
     echo
