@@ -23,15 +23,17 @@ x-base-services:
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     command: orderer
     deploy:
-      #replicas: 3
-      resources:
-        limits:
-          cpus: "0.5"
+      #mode: global
+      mode: replicated
+      replicas: 4
+      #resources:
+        #limits:
+          #cpus: "0.5"
           #memory: 5000M
       restart_policy:
         condition: on-failure
-      placement:
-        constraints: [node.role == manager]  
+      #placement:
+      #  constraints: [node.role == manager]
     depends_on:
       - zookeeper0
       - zookeeper1
@@ -75,12 +77,14 @@ x-base-services:
       CORE_PEER_EVENTS_TIMEWINDOW: 3600s
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
-    deploy: &peer-deploy-common
-      #replicas: 3
-      resources:
-        limits:
-          cpus: "0.25"
-      #    memory: 2500M
+    deploy:
+      #mode: global
+      mode: replicated
+      replicas: 4
+      #resources:
+        #limits:
+          #cpus: "0.25"
+          #memory: 2500M
       restart_policy:
         condition: on-failure   
 
@@ -102,7 +106,7 @@ services:
       
       # new add Kafka config
       ORDERER_KAFKA_RETRY_SHORTINTERVAL: 1s
-      ORDERER_KAFKA_RETRY_SHORTTOTAL: 30s
+      ORDERER_KAFKA_RETRY_SHORTTOTAL: 60s
       ORDERER_KAFKA_VERBOSE: "true"
     volumes:
       - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/channel-artifacts:/etc/hyperledger/configtx:ro
@@ -112,14 +116,12 @@ services:
     ports:
       - 7050:7050
 
-  peer0-org1:
+#-----------------------------------------------------------------------------------
+# org1 service yaml
+#-----------------------------------------------------------------------------------
+  peer0_org1:
     container_name: peer0.org1.foo.com
     <<: *peer-base
-    deploy:
-      <<: *peer-deploy-common
-      placement:
-        constraints:
-          - node.hostname == dev-010
     environment:
       <<: *peer-env-common
       CORE_PEER_ID: peer0.org1.foo.com
@@ -150,14 +152,9 @@ services:
     depends_on:
       - orderer
 
-  peer1-org1:
+  peer1_org1:
     container_name: peer1.org1.foo.com
-    <<: *peer-base
-    deploy:
-      <<: *peer-deploy-common
-      placement:
-        constraints:
-          - node.hostname == dev-020
+    <<: *peer-base    
     environment:
       <<: *peer-env-common
       CORE_PEER_ID: peer1.org1.foo.com
@@ -186,16 +183,14 @@ services:
       - 7058:7053
     depends_on:
       - orderer
-      - peer0-org1  
+      - peer0_org1  
 
-  peer0-org2:
-    container_name: peer0.org2.bar.com    
+#-----------------------------------------------------------------------------------
+# org2 service yaml
+#-----------------------------------------------------------------------------------
+  peer0_org2:
+    container_name: peer0.org2.bar.com
     <<: *peer-base
-    deploy:
-      <<: *peer-deploy-common
-      placement:
-        constraints:
-          - node.hostname == localhost.localdomain
     environment:
       <<: *peer-env-common
       CORE_PEER_ID: peer0.org2.bar.com
@@ -225,14 +220,9 @@ services:
     depends_on:
       - orderer
 
-  peer1-org2:
+  peer1_org2:
     container_name: peer1.org2.bar.com
     <<: *peer-base
-    deploy:
-      <<: *peer-deploy-common
-      placement:
-        constraints:
-          - node.hostname == dev-040
     environment:
       <<: *peer-env-common
       CORE_PEER_ID: peer1.org2.bar.com
@@ -260,5 +250,5 @@ services:
       - 8058:7053
     depends_on:
       - orderer
-      - peer0-org2  
+      - peer0_org2  
 
