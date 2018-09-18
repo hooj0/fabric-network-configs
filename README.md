@@ -48,17 +48,17 @@
 
 ## `swarm` network
 
-***multiple node cluster docker swarm networks.***
+***multiple node cluster docker swarm networks. docker swarm node: 4 ***
 
 **mixing domain/multiple domain**
 
 **OrdererType: kafka**
 
-- ca service: 2
-- orderer service: 1
-- peer 4 org 2 service: 4
-- configtxlator: 1
-- ccenv: 1
-- zookeeper: 3
-- kafka: 4
-- couchdb: 4
+- ca service: 2, replicas: 4
+- orderer service: 1, replicas: 4
+- peer 4 org 2 service: 4, replicas: 4
+- configtxlator: 1, replicas: 2
+- ccenv: 1, replicas: 2
+- zookeeper: 3, replicas: 4
+- kafka: 4, replicas: 4
+- couchdb: 4, replicas: 4
