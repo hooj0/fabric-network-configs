@@ -48,7 +48,7 @@
 
 ## `swarm` network
 
-***multiple node cluster docker swarm networks. docker swarm node: 4 ***
+***multiple node cluster docker swarm networks. docker swarm node: 4***
 
 **mixing domain/multiple domain**
 
