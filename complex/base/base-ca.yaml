@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  ca-base:
+    image: hyperledger/fabric-ca${IMAGE_TAG_FABRIC_CA}
+    restart: always
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_TLS_ENABLED=${HYPERLEDGER_FABRIC_ENABLE_TLS}
+    expose:
+      - "7054"  
