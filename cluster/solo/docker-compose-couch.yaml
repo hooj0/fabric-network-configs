@@ -1,0 +1,116 @@
+# hyperledger fabric network generator tools
+# Copyright by @hoojo
+# hoojo.me@gmail.com create by 2018-09-12
+# @changelog hyperledger fabric network generator tools fabric template defined
+
+version: '3.6'
+
+#-----------------------------------------------------------------------------------
+# base service yaml
+#-----------------------------------------------------------------------------------
+x-base-services:
+  couchdb: &couchdb-base
+    image: hyperledger/fabric-couchdb${IMAGE_TAG_FABRIC_COUCHDB}
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    expose:
+      - 5984
+    deploy: &couchdb-deploy-common
+      #mode: global
+      mode: replicated
+      replicas: 2
+      #resources:
+        #limits:
+          #cpus: "0.25"
+          #memory: 3000M
+      restart_policy:
+        condition: on-failure
+
+
+#-----------------------------------------------------------------------------------
+# couchdb & peer service yaml
+#-----------------------------------------------------------------------------------
+services:
+
+  couchdb_one_org1:
+    container_name: couchdb.one.org1.masget.com
+    hostname: couchdb.one.org1.masget.com
+    <<: *couchdb-base
+    ports:
+      - "5984:5984"
+    networks:
+      blockchain_net:
+        aliases:
+          - couchdb.one.org1.masget.com
+
+  couchdb_two_org1:
+    container_name: couchdb.two.org1.masget.com
+    hostname: couchdb.two.org1.masget.com
+    <<: *couchdb-base
+    networks:
+      blockchain_net:
+        aliases:
+          - couchdb.two.org1.masget.com
+
+  couchdb_three_org2:
+    container_name: couchdb.three.org2.masget.com
+    hostname: couchdb.three.org2.masget.com
+    <<: *couchdb-base
+    networks:
+      blockchain_net:
+        aliases:
+          - couchdb.three.org2.masget.com
+
+  couchdb_four_org2:
+    container_name: couchdb.four.org2.masget.com
+    hostname: couchdb.four.org2.masget.com
+    <<: *couchdb-base
+    networks:
+      blockchain_net:
+        aliases:
+          - couchdb.four.org2.masget.com
+
+
+#-----------------------------------------------------------------------------------
+# Org1 service yaml
+#-----------------------------------------------------------------------------------
+  one_org1:
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb_one_org1:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    depends_on:
+      - couchdb_one_org1
+
+  two_org1:
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb_two_org1:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    depends_on:
+      - couchdb_two_org1
+
+#-----------------------------------------------------------------------------------
+# Org2 service yaml
+#-----------------------------------------------------------------------------------
+  three_org2:
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb_three_org2:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    depends_on:
+      - couchdb_three_org2
+
+  four_org2:
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb_four_org2:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+    depends_on:
+      - couchdb_four_org2
+
