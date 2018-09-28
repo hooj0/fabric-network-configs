@@ -93,13 +93,13 @@ function replacePrivateKey () {
     cp -rv ../docker-compose-fabric-template.yaml docker-compose-fabric-${VERSION_DIR}.yaml
 
     CURRENT_DIR=$PWD
-    cd ./$CRYPTO_CONFIG_LOCATION/peerOrganizations/org1.masget.com/ca/
+    cd ./$CRYPTO_CONFIG_LOCATION/peerOrganizations/org1.hoojo.top/ca/
     PRIV_KEY=$(ls *_sk)
     cd $CURRENT_DIR
 
     sed $OPTS "s/CA1_PRIVATE_KEY/${PRIV_KEY}/g" "docker-compose-fabric-${VERSION_DIR}.yaml"
 
-    cd ./$CRYPTO_CONFIG_LOCATION/peerOrganizations/org2.masget.com/ca/
+    cd ./$CRYPTO_CONFIG_LOCATION/peerOrganizations/org2.hoojo.top/ca/
     PRIV_KEY=$(ls *_sk)
     cd $CURRENT_DIR
 
@@ -291,7 +291,7 @@ function fetchRequiredChannelArtifacts() {
     echo "#######       fetch channel artifacts directory       ##########"
     echo "#################################################################"
 
-    requiredFiles="crypto-config/peerOrganizations/org1.masget.com/msp/cacerts"
+    requiredFiles="crypto-config/peerOrganizations/org1.hoojo.top/msp/cacerts"
     requiredFiles="crypto-config"
     
     if [ ! -d "$requiredFiles" ]; then
