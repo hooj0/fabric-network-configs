@@ -108,9 +108,29 @@ use `1 zookeeper & 1 kafka` service. ***docker swarm node: 4***
 - zookeeper: 1, replicas: 4
 - kafka: 1, replicas: 4
 
+## `replicated`  network
+
+Use replicated network, The same service exists for every machine. ***docker swarm node: 4***
+
+**mixing domain/multiple domain**
+
+**OrdererType: kafka**
+
+- ca service: 2, replicas: 4
+- orderer service: 1, replicas: 4
+- peer 4 org 2 service: 4, replicas: 4
+- configtxlator: 1, replicas: 1
+- ccenv: 1, replicas: 1
+- couchdb: 4, replicas: 4
+
+- zookeeper: 3, replicas: 4
+- kafka: 4, replicas: 4
+
 ## `distributed`  network
 
 Use distributed network, Distribute services on different machine nodes. ***docker swarm node: 4***
+
+![1538123014807](D:\work_private\notes\blockchain\.img\1538123014807.png)
 
 **mixing domain/multiple domain**
 
