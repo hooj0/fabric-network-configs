@@ -106,4 +106,4 @@ venv.bak/
 /networks
 networks/*
 networks/
-single
+*/.project
