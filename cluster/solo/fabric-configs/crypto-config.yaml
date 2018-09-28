@@ -26,7 +26,7 @@ OrdererOrgs:
   #      - Hostname: orderer
 
   - Name: Orderer
-    Domain: masget.com
+    Domain: hoojo.top
     CA:
         Country: US
         Province: California
@@ -98,30 +98,30 @@ PeerOrgs:
   # ---------------------------------------------------------------------------
 
   - Name: Org1
-    Domain: org1.masget.com
+    Domain: org1.hoojo.top
     EnableNodeOUs: true
     CA:
         Country: US
         Province: California
         Locality: San Francisco
     Specs:
-      - Hostname: one # implicitly "one.org1.masget.com"
+      - Hostname: one # implicitly "one.org1.hoojo.top"
         #CommonName: foo27.org5.example.com # overrides Hostname-based FQDN set above
-      - Hostname: two # implicitly "two.org1.masget.com"
+      - Hostname: two # implicitly "two.org1.hoojo.top"
     Users:
       Count: 2
 
   - Name: Org2
-    Domain: org2.masget.com
+    Domain: org2.hoojo.top
     EnableNodeOUs: true
     CA:
         Country: US
         Province: California
         Locality: San Francisco
     Specs:
-      - Hostname: three # implicitly "three.org2.masget.com"
+      - Hostname: three # implicitly "three.org2.hoojo.top"
         #CommonName: foo27.org5.example.com # overrides Hostname-based FQDN set above
-      - Hostname: four # implicitly "four.org2.masget.com"
+      - Hostname: four # implicitly "four.org2.hoojo.top"
     Users:
       Count: 2
 
