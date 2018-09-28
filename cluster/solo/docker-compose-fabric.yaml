@@ -93,13 +93,13 @@ services:
 # Orderer service yaml
 #-----------------------------------------------------------------------------------
   orderer:
-    container_name: orderer.masget.com
+    container_name: orderer.hoojo.top
     <<: *orderer-base
     environment:
       <<: *orderer-env-common
       ORDERER_GENERAL_LOCALMSPID: OrdererMSP
       ORDERER_GENERAL_LOGLEVEL: debug
-      ORDERER_GENERAL_TLS_CLIENTROOTCAS: "[/etc/hyperledger/msp/peerOrg1/msp/tlscacerts/tlsca.org1.masget.com-cert.pem, /etc/hyperledger/msp/peerOrg2/msp/tlscacerts/tlsca.org2.masget.com-cert.pem]"
+      ORDERER_GENERAL_TLS_CLIENTROOTCAS: "[/etc/hyperledger/msp/peerOrg1/msp/tlscacerts/tlsca.org1.hoojo.top-cert.pem, /etc/hyperledger/msp/peerOrg2/msp/tlscacerts/tlsca.org2.hoojo.top-cert.pem]"
       GRPC_TRACE: all=true,
       GRPC_VERBOSITY: debug
       ORDERER_GENERAL_AUTHENTICATION_TIMEWINDOW: 3600s #Not for production -- remove.
@@ -110,9 +110,9 @@ services:
       ORDERER_KAFKA_VERBOSE: "true"
     volumes:
       - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/channel-artifacts:/etc/hyperledger/configtx:ro
-      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/ordererOrganizations/masget.com/orderers/orderer.masget.com/:/etc/hyperledger/msp/orderer:ro
-      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.masget.com/peers/one.org1.masget.com/:/etc/hyperledger/msp/peerOrg1:ro
-      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.masget.com/peers/three.org2.masget.com/:/etc/hyperledger/msp/peerOrg2:ro
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/ordererOrganizations/hoojo.top/orderers/orderer.hoojo.top/:/etc/hyperledger/msp/orderer:ro
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.hoojo.top/peers/one.org1.hoojo.top/:/etc/hyperledger/msp/peerOrg1:ro
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.hoojo.top/peers/three.org2.hoojo.top/:/etc/hyperledger/msp/peerOrg2:ro
 
     ports:
       - 7050:7050
@@ -123,32 +123,32 @@ services:
 # Org1 service yaml
 #-----------------------------------------------------------------------------------
   one_org1:
-    container_name: one.org1.masget.com
+    container_name: one.org1.hoojo.top
     <<: *peer-base
     environment:
       <<: *peer-env-common
-      CORE_PEER_ID: one.org1.masget.com
-      CORE_PEER_ADDRESS: one.org1.masget.com:7051
-      CORE_PEER_GOSSIP_EXTERNALENDPOINT: one.org1.masget.com:7051
+      CORE_PEER_ID: one.org1.hoojo.top
+      CORE_PEER_ADDRESS: one.org1.hoojo.top:7051
+      CORE_PEER_GOSSIP_EXTERNALENDPOINT: one.org1.hoojo.top:7051
       #CORE_PEER_GOSSIP_ORGLEADER: true
       CORE_PEER_LOCALMSPID: Org1MSP
 
-      #CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/msp/cacerts/ca.org1.masget.com-cert.pem
-      CORE_PEER_TLS_CLIENTROOTCAS_FILES: /etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org1.masget.com-cert.pem
+      #CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/msp/cacerts/ca.org1.hoojo.top-cert.pem
+      CORE_PEER_TLS_CLIENTROOTCAS_FILES: /etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org1.hoojo.top-cert.pem
 
       # NEW ADD
-      CORE_PEER_CHAINCODEADDRESS: one.org1.masget.com:7052
+      CORE_PEER_CHAINCODEADDRESS: one.org1.hoojo.top:7052
       CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
-      CORE_PEER_GOSSIP_BOOTSTRAP: one.org1.masget.com:7051
-      #CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org1.masget.com:7051
+      CORE_PEER_GOSSIP_BOOTSTRAP: one.org1.hoojo.top:7051
+      #CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org1.hoojo.top:7051
 
       # v1.2
-      # CORE_PEER_LISTENADDRESS: one.org1.masget.com:7051
-      CORE_PEER_GOSSIP_ENDPOINT: one.org1.masget.com:7051
+      # CORE_PEER_LISTENADDRESS: one.org1.hoojo.top:7051
+      CORE_PEER_GOSSIP_ENDPOINT: one.org1.hoojo.top:7051
       CORE_PEER_EVENTS_ADDRESS: 0.0.0.0:7053
     volumes:
       - /var/run/:/host/var/run/
-      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.masget.com/peers/one.org1.masget.com/:/etc/hyperledger/msp/peer:ro
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.hoojo.top/peers/one.org1.hoojo.top/:/etc/hyperledger/msp/peer:ro
     ports:
       - 7051:7051
       - 7052:7052
@@ -158,32 +158,32 @@ services:
 
 
   two_org1:
-    container_name: two.org1.masget.com
+    container_name: two.org1.hoojo.top
     <<: *peer-base
     environment:
       <<: *peer-env-common
-      CORE_PEER_ID: two.org1.masget.com
-      CORE_PEER_ADDRESS: two.org1.masget.com:7051
-      CORE_PEER_GOSSIP_EXTERNALENDPOINT: two.org1.masget.com:7051
+      CORE_PEER_ID: two.org1.hoojo.top
+      CORE_PEER_ADDRESS: two.org1.hoojo.top:7051
+      CORE_PEER_GOSSIP_EXTERNALENDPOINT: two.org1.hoojo.top:7051
       #CORE_PEER_GOSSIP_ORGLEADER: true
       CORE_PEER_LOCALMSPID: Org1MSP
 
-      #CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/msp/cacerts/ca.org1.masget.com-cert.pem
-      CORE_PEER_TLS_CLIENTROOTCAS_FILES: /etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org1.masget.com-cert.pem
+      #CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/msp/cacerts/ca.org1.hoojo.top-cert.pem
+      CORE_PEER_TLS_CLIENTROOTCAS_FILES: /etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org1.hoojo.top-cert.pem
 
       # NEW ADD
-      CORE_PEER_CHAINCODEADDRESS: two.org1.masget.com:7052
+      CORE_PEER_CHAINCODEADDRESS: two.org1.hoojo.top:7052
       CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
-      CORE_PEER_GOSSIP_BOOTSTRAP: two.org1.masget.com:7051
-      #CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org1.masget.com:7051
+      CORE_PEER_GOSSIP_BOOTSTRAP: two.org1.hoojo.top:7051
+      #CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org1.hoojo.top:7051
 
       # v1.2
-      # CORE_PEER_LISTENADDRESS: two.org1.masget.com:7051
-      CORE_PEER_GOSSIP_ENDPOINT: two.org1.masget.com:7051
+      # CORE_PEER_LISTENADDRESS: two.org1.hoojo.top:7051
+      CORE_PEER_GOSSIP_ENDPOINT: two.org1.hoojo.top:7051
       CORE_PEER_EVENTS_ADDRESS: 0.0.0.0:7053
     volumes:
       - /var/run/:/host/var/run/
-      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.masget.com/peers/two.org1.masget.com/:/etc/hyperledger/msp/peer:ro
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.hoojo.top/peers/two.org1.hoojo.top/:/etc/hyperledger/msp/peer:ro
     ports:
       - 8051:7051
       - 8052:7052
@@ -197,32 +197,32 @@ services:
 # Org2 service yaml
 #-----------------------------------------------------------------------------------
   three_org2:
-    container_name: three.org2.masget.com
+    container_name: three.org2.hoojo.top
     <<: *peer-base
     environment:
       <<: *peer-env-common
-      CORE_PEER_ID: three.org2.masget.com
-      CORE_PEER_ADDRESS: three.org2.masget.com:7051
-      CORE_PEER_GOSSIP_EXTERNALENDPOINT: three.org2.masget.com:7051
+      CORE_PEER_ID: three.org2.hoojo.top
+      CORE_PEER_ADDRESS: three.org2.hoojo.top:7051
+      CORE_PEER_GOSSIP_EXTERNALENDPOINT: three.org2.hoojo.top:7051
       #CORE_PEER_GOSSIP_ORGLEADER: true
       CORE_PEER_LOCALMSPID: Org2MSP
 
-      #CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/msp/cacerts/ca.org2.masget.com-cert.pem
-      CORE_PEER_TLS_CLIENTROOTCAS_FILES: /etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org2.masget.com-cert.pem
+      #CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/msp/cacerts/ca.org2.hoojo.top-cert.pem
+      CORE_PEER_TLS_CLIENTROOTCAS_FILES: /etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org2.hoojo.top-cert.pem
 
       # NEW ADD
-      CORE_PEER_CHAINCODEADDRESS: three.org2.masget.com:7052
+      CORE_PEER_CHAINCODEADDRESS: three.org2.hoojo.top:7052
       CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
-      CORE_PEER_GOSSIP_BOOTSTRAP: three.org2.masget.com:7051
-      #CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org2.masget.com:7051
+      CORE_PEER_GOSSIP_BOOTSTRAP: three.org2.hoojo.top:7051
+      #CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org2.hoojo.top:7051
 
       # v1.2
-      # CORE_PEER_LISTENADDRESS: three.org2.masget.com:7051
-      CORE_PEER_GOSSIP_ENDPOINT: three.org2.masget.com:7051
+      # CORE_PEER_LISTENADDRESS: three.org2.hoojo.top:7051
+      CORE_PEER_GOSSIP_ENDPOINT: three.org2.hoojo.top:7051
       CORE_PEER_EVENTS_ADDRESS: 0.0.0.0:7053
     volumes:
       - /var/run/:/host/var/run/
-      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.masget.com/peers/three.org2.masget.com/:/etc/hyperledger/msp/peer:ro
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.hoojo.top/peers/three.org2.hoojo.top/:/etc/hyperledger/msp/peer:ro
     ports:
       - 9051:7051
       - 9052:7052
@@ -232,32 +232,32 @@ services:
 
 
   four_org2:
-    container_name: four.org2.masget.com
+    container_name: four.org2.hoojo.top
     <<: *peer-base
     environment:
       <<: *peer-env-common
-      CORE_PEER_ID: four.org2.masget.com
-      CORE_PEER_ADDRESS: four.org2.masget.com:7051
-      CORE_PEER_GOSSIP_EXTERNALENDPOINT: four.org2.masget.com:7051
+      CORE_PEER_ID: four.org2.hoojo.top
+      CORE_PEER_ADDRESS: four.org2.hoojo.top:7051
+      CORE_PEER_GOSSIP_EXTERNALENDPOINT: four.org2.hoojo.top:7051
       #CORE_PEER_GOSSIP_ORGLEADER: true
       CORE_PEER_LOCALMSPID: Org2MSP
 
-      #CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/msp/cacerts/ca.org2.masget.com-cert.pem
-      CORE_PEER_TLS_CLIENTROOTCAS_FILES: /etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org2.masget.com-cert.pem
+      #CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/msp/peer/msp/cacerts/ca.org2.hoojo.top-cert.pem
+      CORE_PEER_TLS_CLIENTROOTCAS_FILES: /etc/hyperledger/msp/peer/msp/tlscacerts/tlsca.org2.hoojo.top-cert.pem
 
       # NEW ADD
-      CORE_PEER_CHAINCODEADDRESS: four.org2.masget.com:7052
+      CORE_PEER_CHAINCODEADDRESS: four.org2.hoojo.top:7052
       CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
-      CORE_PEER_GOSSIP_BOOTSTRAP: four.org2.masget.com:7051
-      #CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org2.masget.com:7051
+      CORE_PEER_GOSSIP_BOOTSTRAP: four.org2.hoojo.top:7051
+      #CORE_PEER_GOSSIP_BOOTSTRAP: peer1.org2.hoojo.top:7051
 
       # v1.2
-      # CORE_PEER_LISTENADDRESS: four.org2.masget.com:7051
-      CORE_PEER_GOSSIP_ENDPOINT: four.org2.masget.com:7051
+      # CORE_PEER_LISTENADDRESS: four.org2.hoojo.top:7051
+      CORE_PEER_GOSSIP_ENDPOINT: four.org2.hoojo.top:7051
       CORE_PEER_EVENTS_ADDRESS: 0.0.0.0:7053
     volumes:
       - /var/run/:/host/var/run/
-      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.masget.com/peers/four.org2.masget.com/:/etc/hyperledger/msp/peer:ro
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.hoojo.top/peers/four.org2.hoojo.top/:/etc/hyperledger/msp/peer:ro
     ports:
       - 10051:7051
       - 10052:7052
