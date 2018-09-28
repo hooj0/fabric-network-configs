@@ -34,42 +34,42 @@ x-base-services:
 services:
 
   couchdb_one_org1:
-    container_name: couchdb.one.org1.masget.com
-    hostname: couchdb.one.org1.masget.com
+    container_name: couchdb.one.org1.hoojo.top
+    hostname: couchdb.one.org1.hoojo.top
     <<: *couchdb-base
     ports:
       - "5984:5984"
     networks:
       blockchain_net:
         aliases:
-          - couchdb.one.org1.masget.com
+          - couchdb.one.org1.hoojo.top
 
   couchdb_two_org1:
-    container_name: couchdb.two.org1.masget.com
-    hostname: couchdb.two.org1.masget.com
+    container_name: couchdb.two.org1.hoojo.top
+    hostname: couchdb.two.org1.hoojo.top
     <<: *couchdb-base
     networks:
       blockchain_net:
         aliases:
-          - couchdb.two.org1.masget.com
+          - couchdb.two.org1.hoojo.top
 
   couchdb_three_org2:
-    container_name: couchdb.three.org2.masget.com
-    hostname: couchdb.three.org2.masget.com
+    container_name: couchdb.three.org2.hoojo.top
+    hostname: couchdb.three.org2.hoojo.top
     <<: *couchdb-base
     networks:
       blockchain_net:
         aliases:
-          - couchdb.three.org2.masget.com
+          - couchdb.three.org2.hoojo.top
 
   couchdb_four_org2:
-    container_name: couchdb.four.org2.masget.com
-    hostname: couchdb.four.org2.masget.com
+    container_name: couchdb.four.org2.hoojo.top
+    hostname: couchdb.four.org2.hoojo.top
     <<: *couchdb-base
     networks:
       blockchain_net:
         aliases:
-          - couchdb.four.org2.masget.com
+          - couchdb.four.org2.hoojo.top
 
 
 #-----------------------------------------------------------------------------------
