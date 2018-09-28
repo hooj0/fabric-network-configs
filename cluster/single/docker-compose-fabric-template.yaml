@@ -1,0 +1,191 @@
+# hyperledger fabric network generator tools
+# Copyright by @hoojo
+# hoojo.me@gmail.com create by 2018-09-12
+# @changelog hyperledger fabric network generator tools fabric template defined
+
+version: '3.6'
+
+#-----------------------------------------------------------------------------------
+# base service yaml
+#-----------------------------------------------------------------------------------
+x-base-services:
+  ca: &ca-base
+    image: hyperledger/fabric-ca${IMAGE_TAG_FABRIC_CA}
+    environment: &ca-env-common
+      FABRIC_CA_HOME: /etc/hyperledger/fabric-ca-server
+      FABRIC_CA_SERVER_TLS_ENABLED: ${HYPERLEDGER_FABRIC_ENABLE_TLS}
+    deploy: &ca-deploy-common
+      #mode: global
+      mode: replicated
+      replicas: 4
+      #resources:
+        #limits:
+          #cpus: "0.2"
+          #memory: 2000M
+      restart_policy:
+        condition: on-failure   
+
+
+#-----------------------------------------------------------------------------------
+# networks yaml
+#-----------------------------------------------------------------------------------
+networks:
+  blockchain_net:
+    driver: overlay
+    attachable: true
+
+
+#-----------------------------------------------------------------------------------
+# core service yaml
+#-----------------------------------------------------------------------------------
+services:
+  ca0:
+    container_name: ca.org1.hoojo.top
+    hostname: ca.org1.hoojo.top
+    <<: *ca-base
+    environment:
+      <<: *ca-env-common
+      FABRIC_CA_SERVER_CA_NAME: ca-org1
+      FABRIC_CA_SERVER_TLS_KEYFILE: /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY
+      FABRIC_CA_SERVER_TLS_CERTFILE: /etc/hyperledger/fabric-ca-server-config/ca.org1.hoojo.top-cert.pem
+    command: sh -c "fabric-ca-server start ${V11_IDENTITIES_ALLOWREMOVE} ${V11_AFFILIATIONS_ALLOWREMOVE} --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.hoojo.top-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -b admin:adminpw -d"
+    #command: sh -c "fabric-ca-server start -n ca-org1 ${V11_IDENTITIES_ALLOWREMOVE} ${V11_AFFILIATIONS_ALLOWREMOVE} --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.hoojo.top-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -b admin:adminpw ${HYPERLEDGER_FABRIC_ENABLE_CA_TLS} --tls.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.hoojo.top-cert.pem --tls.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -d"
+    ports:
+      - 7054:7054
+    volumes:
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org1.hoojo.top/ca/:/etc/hyperledger/fabric-ca-server-config:ro
+    networks:
+      blockchain_net:
+        aliases:
+          - ca.org1.hoojo.top
+
+  ca1:
+    container_name: ca.org2.hoojo.top
+    hostname: ca.org2.hoojo.top
+    <<: *ca-base
+    environment:
+      <<: *ca-env-common
+      FABRIC_CA_SERVER_CA_NAME: ca-org2
+      FABRIC_CA_SERVER_TLS_KEYFILE: /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY
+      FABRIC_CA_SERVER_TLS_CERTFILE: /etc/hyperledger/fabric-ca-server-config/ca.org2.hoojo.top-cert.pem
+    command: sh -c "fabric-ca-server start ${V11_IDENTITIES_ALLOWREMOVE} ${V11_AFFILIATIONS_ALLOWREMOVE} --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org2.hoojo.top-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -b admin:adminpw -d"
+    #command: sh -c "fabric-ca-server start -n ca-org2 ${V11_IDENTITIES_ALLOWREMOVE} ${V11_AFFILIATIONS_ALLOWREMOVE} --registry.maxenrollments -1 --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org2.hoojo.top-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -b admin:adminpw ${HYPERLEDGER_FABRIC_ENABLE_CA_TLS} --tls.certfile /etc/hyperledger/fabric-ca-server-config/ca.org2.hoojo.top-cert.pem --tls.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -d"
+    ports:
+      - 8054:7054
+    volumes:
+      - ./fabric-configs/${FABRIC_NETWORK_CONFIGTX_VERSION}/crypto-config/peerOrganizations/org2.hoojo.top/ca/:/etc/hyperledger/fabric-ca-server-config:ro
+    networks:
+      blockchain_net:
+        aliases:
+          - ca.org2.hoojo.top
+
+
+#-----------------------------------------------------------------------------------
+# tools service yaml
+#-----------------------------------------------------------------------------------  
+  configtxlator:
+    container_name: configtxlator.com
+    hostname: configtxlator.com
+    image: hyperledger/fabric-tools${IMAGE_TAG_FABRIC}    
+    command: /usr/local/bin/configtxlator start
+    ports:
+      - "7059:7059"
+    networks:
+      blockchain_net:
+        aliases:
+          - configtxlator.com
+    deploy:
+      replicas: 1
+      #resources:
+        #limits:
+          #cpus: "0.1"
+          #memory: 500M
+      restart_policy:
+        condition: on-failure  
+
+  ccenv:
+    container_name: ccenv
+    image: hyperledger/fabric-ccenv${IMAGE_TAG_FABRIC}
+    networks:
+      - blockchain_net
+    deploy:
+      replicas: 1
+      #resources:
+        #limits:
+          #cpus: "0.1"
+          #memory: 2000M
+      restart_policy:
+        condition: on-failure
+
+
+#-----------------------------------------------------------------------------------
+# zookeeper service yaml
+#-----------------------------------------------------------------------------------
+  zookeeper0:
+    hostname: zookeeper0.hoojo.top
+    networks:
+      blockchain_net:
+        aliases:
+          - zookeeper0.hoojo.top
+
+
+#-----------------------------------------------------------------------------------
+# kafka service yaml
+#-----------------------------------------------------------------------------------
+  kafka0:
+    hostname: kafka0.hoojo.top
+    networks:
+      blockchain_net:
+        aliases:
+          - kafka0.hoojo.top
+
+
+#-----------------------------------------------------------------------------------
+# orderer & peer service yaml
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+# Orderer service yaml
+#-----------------------------------------------------------------------------------
+  orderer:
+    hostname: orderer.hoojo.top
+    networks:
+      blockchain_net:
+        aliases:
+          - orderer.hoojo.top
+
+
+
+#-----------------------------------------------------------------------------------
+# Org1 service yaml
+#-----------------------------------------------------------------------------------
+  one_org1:
+    hostname: one.org1.hoojo.top
+    networks:
+      blockchain_net:
+        aliases:
+          - one.org1.hoojo.top
+
+  two_org1:
+    hostname: two.org1.hoojo.top
+    networks:
+      blockchain_net:
+        aliases:
+          - two.org1.hoojo.top
+
+#-----------------------------------------------------------------------------------
+# Org2 service yaml
+#-----------------------------------------------------------------------------------
+  three_org2:
+    hostname: three.org2.hoojo.top
+    networks:
+      blockchain_net:
+        aliases:
+          - three.org2.hoojo.top
+
+  four_org2:
+    hostname: four.org2.hoojo.top
+    networks:
+      blockchain_net:
+        aliases:
+          - four.org2.hoojo.top
+
