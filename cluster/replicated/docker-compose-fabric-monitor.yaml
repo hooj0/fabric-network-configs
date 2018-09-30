@@ -1,0 +1,101 @@
+# hyperledger fabric network generator tools
+# Copyright by @hoojo
+# hoojo.me@gmail.com create by 2018-09-12
+# @changelog hyperledger fabric network generator tools fabric monitor network template defined
+
+version: '3.6'
+
+networks:
+  external_monitor_net:
+    external:
+      name: monitor_net
+
+services:
+  configtxlator:
+    networks:
+      - external_monitor_net
+    
+  ccenv:
+    networks:
+      - external_monitor_net
+    
+  visualizer:
+    networks:
+      - external_monitor_net
+      
+      
+#-----------------------------------------------------------------------------------
+# ca service yaml
+#-----------------------------------------------------------------------------------
+  # 0.1
+  ca0:
+    networks:
+      - external_monitor_net    
+  ca1:
+    networks:
+      - external_monitor_net    
+
+#-----------------------------------------------------------------------------------
+# zookeeper service yaml
+#-----------------------------------------------------------------------------------
+  # 0.15
+  zookeeper0:
+    networks:
+      - external_monitor_net
+  zookeeper1:
+    networks:
+      - external_monitor_net
+  zookeeper2:
+    networks:
+      - external_monitor_net
+
+#-----------------------------------------------------------------------------------
+# kafka service yaml
+#-----------------------------------------------------------------------------------
+  # 0.2
+  kafka0:
+    networks:
+      - external_monitor_net
+  kafka1:
+    networks:
+      - external_monitor_net
+  kafka2:
+    networks:
+      - external_monitor_net
+  kafka3:
+    networks:
+      - external_monitor_net
+
+
+#-----------------------------------------------------------------------------------
+# Orderer service yaml
+#-----------------------------------------------------------------------------------
+  orderer:
+    networks:
+      - external_monitor_net
+
+
+
+#-----------------------------------------------------------------------------------
+# Org1 service yaml
+#-----------------------------------------------------------------------------------
+  one_org1:
+    networks:
+      - external_monitor_net
+
+  two_org1:
+    networks:
+      - external_monitor_net
+
+#-----------------------------------------------------------------------------------
+# Org2 service yaml
+#-----------------------------------------------------------------------------------
+  three_org2:
+    networks:
+      - external_monitor_net
+
+  four_org2:
+    networks:
+      - external_monitor_net
+
+         
