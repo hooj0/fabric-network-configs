@@ -75,7 +75,7 @@ services:
       <<: *couchdb-deploy-common
       placement:
         #constraints: [node.role == manager]
-        constraints: [node.hostname == dev-020]
+        constraints: [node.hostname == dev-040]
 
   couchdb_four_org2:
     container_name: couchdb.four.org2.hoojo.me
@@ -88,7 +88,7 @@ services:
     deploy:
       <<: *couchdb-deploy-common
       placement:
-        constraints: [node.hostname == dev-040]
+        constraints: [node.hostname == dev-050]
 
 
 #-----------------------------------------------------------------------------------
