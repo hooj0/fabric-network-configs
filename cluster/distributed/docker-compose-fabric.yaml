@@ -12,6 +12,9 @@ version: '3.6'
 x-base-hosts: &extra_hosts
   - "orderer.hoojo.me:192.168.33.73"
   - "orderer:192.168.33.73"
+  
+  - "three.org2.hoojo.me:192.168.33.72"
+  - "four.org2.hoojo.me:192.168.33.74"
 
 x-base-services:
   orderer-base: &orderer-base
@@ -256,7 +259,8 @@ services:
     deploy:
       <<: *peer-deploy-common
       placement:
-        constraints: [node.role == manager]
+        #constraints: [node.role == manager]
+        constraints: [node.hostname == dev-020]
 
 
   four_org2:
