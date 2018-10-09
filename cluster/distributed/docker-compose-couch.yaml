@@ -74,7 +74,8 @@ services:
     deploy:
       <<: *couchdb-deploy-common
       placement:
-        constraints: [node.role == manager]
+        #constraints: [node.role == manager]
+        constraints: [node.hostname == dev-020]
 
   couchdb_four_org2:
     container_name: couchdb.four.org2.hoojo.me
