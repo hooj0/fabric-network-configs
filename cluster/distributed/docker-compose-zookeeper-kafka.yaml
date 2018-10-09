@@ -30,7 +30,7 @@ x-base-services:
       restart_policy:
         condition: on-failure
       placement:
-        constraints: [node.role == manager]
+        constraints: [node.hostname == dev-030]
 
   kafka: &kafka-base
     image: hyperledger/fabric-kafka${IMAGE_TAG_FABRIC_KAFKA}
@@ -59,7 +59,7 @@ x-base-services:
       restart_policy:
         condition: on-failure
       placement:
-        constraints: [node.role == manager]
+        constraints: [node.hostname == dev-030]
     depends_on:
       - zookeeper0
       - zookeeper1
