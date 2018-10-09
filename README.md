@@ -130,7 +130,7 @@ Use replicated network, The same service exists for every machine. ***docker swa
 
 Use distributed network, Distribute services on different machine nodes. ***docker swarm node: 4***
 
-![1538123107690](D:\work_private\blockchain\fabric-network-configs\.images\1538123107690.png)
+![1538123107690](.images/1538123107690.png)
 
 **mixing domain/multiple domain**
 
