@@ -259,8 +259,7 @@ services:
     deploy:
       <<: *peer-deploy-common
       placement:
-        #constraints: [node.role == manager]
-        constraints: [node.hostname == dev-020]
+        constraints: [node.hostname == dev-040]
 
 
   four_org2:
@@ -301,6 +300,6 @@ services:
     deploy:
       <<: *peer-deploy-common
       placement:
-        constraints: [node.hostname == dev-040]
+        constraints: [node.hostname == dev-050]
 
 
