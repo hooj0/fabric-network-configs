@@ -85,7 +85,7 @@ services:
     deploy:
       <<: *ca-deploy-common
       placement:
-        constraints: [node.role == manager]
+        constraints: [node.hostname == dev-040]
 
 
 #-----------------------------------------------------------------------------------
@@ -109,7 +109,9 @@ services:
           #cpus: "0.1"
           #memory: 500M
       restart_policy:
-        condition: on-failure  
+        condition: on-failure
+      placement:
+        constraints: [node.role == manager]
 
   ccenv:
     container_name: ccenv
@@ -124,6 +126,8 @@ services:
           #memory: 2000M
       restart_policy:
         condition: on-failure
+      placement:
+        constraints: [node.role == manager]
 
 
 #-----------------------------------------------------------------------------------
